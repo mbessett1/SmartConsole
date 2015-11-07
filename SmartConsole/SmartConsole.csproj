@@ -57,6 +57,9 @@
     <Compile Include="Tasks\Help.cs" />
     <Compile Include="TypeExtensions.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ReadMe.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
