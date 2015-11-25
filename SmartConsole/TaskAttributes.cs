@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Bessett.SmartConsole
 {
+    /// <summary>
+    /// Help for this task
+    /// </summary>
     public class TaskHelp : Attribute
     {
         internal string Name { get; set; }
@@ -16,8 +19,14 @@ namespace Bessett.SmartConsole
 
     }
 
+    /// <summary>
+    /// supress help for this task
+    /// </summary>
     public class NoHelp : Attribute { }
 
+    /// <summary>
+    /// supress built-in confirmation for this task
+    /// </summary>
     public class NoConfirmation : Attribute { }
 
 }

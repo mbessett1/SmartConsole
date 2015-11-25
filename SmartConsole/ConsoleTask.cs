@@ -7,12 +7,17 @@ using System.Threading.Tasks;
 
 namespace Bessett.SmartConsole
 {
-
+    /// <summary>
+    /// Base console task available via command line
+    /// </summary>
     public class ConsoleTask
     {
         private string[] _commandArguments;
         private bool _silent = false;
 
+        /// <summary>
+        /// Built-in parameter for all tasks to supress confirmation default is NO
+        /// </summary>
         [ArgumentHelp("Supress confirmation (default=NO)")]
         public bool Silent
         {
@@ -23,8 +28,12 @@ namespace Bessett.SmartConsole
             set { _silent = value; }
         }
 
+        /// <summary>
+        /// Access to Command arguments
+        /// </summary>
         public Dictionary<string, string> CommandArguments { get; private set; }
 
+        // override when special argument handling required
         public virtual string[] Arguments
         {
             get
@@ -65,6 +74,10 @@ namespace Bessett.SmartConsole
         }
         #endregion
 
+        /// <summary>
+        /// Indicator that all required arguments are specified
+        /// </summary>
+        /// <returns></returns>
         protected bool RequiredArgumentsPresent()
         {
             var isValid = true;
@@ -90,6 +103,11 @@ namespace Bessett.SmartConsole
             return isValid;
         }
 
+        /// <summary>
+        /// Provides built-in confirmation before executing by prompting user to press 'y'
+        /// override for specialized confirmation 
+        /// </summary>
+        /// <returns></returns>
         public virtual bool ConfirmStart()
         {
             bool executionPreAuthorized = Silent;
@@ -111,10 +129,19 @@ namespace Bessett.SmartConsole
             return executionAuthorized && isTaskValid;
         }
 
+        /// <summary>
+        /// function called upon completion of Start()
+        /// </summary>
         public virtual void Complete() {}
 
+        /// <summary>
+        /// Function called once all validation and confirmation complete
+        /// </summary>
         public virtual void Start() { }
 
+        /// <summary>
+        /// Echo all arguments
+        /// </summary>
         public void WriteArguments()
         {
             foreach (var arg in GetType().GetTaskArguments().Where(a=> a.PropertyInfo.Name != "Silent"))
@@ -123,6 +150,9 @@ namespace Bessett.SmartConsole
             }
         }
 
+        /// <summary>
+        /// Returns the reflected help text, or member Name if not specified
+        /// </summary>
         public virtual string HelpName {
             get
             {
@@ -135,6 +165,9 @@ namespace Bessett.SmartConsole
             }
         }
 
+        /// <summary>
+        /// Returns the reflected help description, or blank if not specified
+        /// </summary>
         public virtual string HelpDescription
         {
             get
@@ -143,6 +176,10 @@ namespace Bessett.SmartConsole
                 return (helpText != null) ? helpText.Description : "";
             }
         }
+
+        /// <summary>
+        /// Returns the reflected help verbose description, or blank if not specified
+        /// </summary>
         public virtual string HelpLongDescription
         {
             get
