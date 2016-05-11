@@ -1,0 +1,14 @@
+
+: Publish nuget package (on nuget.org)
+
+: Generate nuspec template from csproj
+..\.nuget\nuget spec
+
+: Pack nuspec (assuming nuspec created)
+..\.nuget\nuget pack smartconsole.csproj
+
+:set API Key
+Z:\MBessett\Git\SmartConsole\SmartConsole\.nuget\nuget.exe SetApiKey d8fbec70-d5e4-4b98-984d-3b311e4f439d
+
+:publish
+..\.nuget\nuget push Bessett.SmartConsole.0.1.0.0.nupkg

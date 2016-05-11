@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <!-- licenseUrl></licenseUrl -->
+    <projectUrl>https://github.com/mbessett1/SmartConsole.git</projectUrl>
+    <!-- iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl -->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Added context help.</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags></tags>
+  </metadata>
+</package>
