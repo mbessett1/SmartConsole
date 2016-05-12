@@ -114,7 +114,11 @@ namespace Bessett.SmartConsole.Tasks
             }
             return result;
         }
- 
+
+        public override void Complete()
+        {
+
+        }
     }
 
 }

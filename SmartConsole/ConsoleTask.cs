@@ -10,7 +10,7 @@ namespace Bessett.SmartConsole
     /// <summary>
     /// Base console task available via command line
     /// </summary>
-    public class ConsoleTask
+    public  class ConsoleTask
     {
         private string[] _commandArguments;
         private bool _silent = false;
@@ -132,7 +132,7 @@ namespace Bessett.SmartConsole
         /// <summary>
         /// function called upon completion of Start()
         /// </summary>
-        public virtual void Complete() {}
+        public virtual void Complete() { }
 
         /// <summary>
         /// Function called once all validation and confirmation complete
@@ -142,8 +142,9 @@ namespace Bessett.SmartConsole
         /// <summary>
         /// Echo all arguments
         /// </summary>
-        public void WriteArguments()
+        protected void WriteArguments()
         {
+            Console.WriteLine("\nArguments:");
             foreach (var arg in GetType().GetTaskArguments().Where(a=> a.PropertyInfo.Name != "Silent"))
             {
                 Console.WriteLine("  {0} = {1} ", arg.PropertyInfo.Name, arg.PropertyInfo.GetValue(this));

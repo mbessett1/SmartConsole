@@ -21,16 +21,19 @@ namespace Bessett.SmartConsole
         internal static void BuildAvailableTasks(string baseTypeName)
         {
             BaseTaskTypeName = baseTypeName;
+            Type baseType = typeof(ConsoleTask);
 
             var internalTasks = Assembly.GetCallingAssembly().GetTypes()
                 .Where(t => t.IsClass
-                            && !t.IsAbstract
-                            && t.BaseType.Name == BaseTaskTypeName);
+                            && !t.IsAbstract //
+                            && t.IsSubclassOf(baseType)
+                            );
 
             var definedTasks = Assembly.GetEntryAssembly().GetTypes()
                 .Where(t => t.IsClass
                             && !t.IsAbstract
-                            && t.BaseType.Name == BaseTaskTypeName);
+                            && t.IsSubclassOf(baseType)
+                            );
 
             var tasks = internalTasks.ToList();
             tasks.AddRange(definedTasks.ToList());

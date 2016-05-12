@@ -9,6 +9,11 @@ namespace SmartConsole.Test.Tasks
 {
     public class Test1:ConsoleTask
     {
+        public override void Complete()
+        {
+            //throw new NotImplementedException();
+        }
+
         public override void Start()
         {
             Console.WriteLine("Test1 executing");
