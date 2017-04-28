@@ -59,6 +59,7 @@ Additional Information:
 
 1. Added shell task that will allow task commands to operate within a shell
 2. Added TaskPackage support that allows tasks to be composed and executed as a package/group
+3. Added support to load task package/script from a file
   
 
 
