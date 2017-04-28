@@ -55,7 +55,11 @@ Additional Information:
   When the app runs, it will pause to confirm execution UNLESS the task class has a [NoConfirmation] attribute, 
   or the commandline specified "-Silent".
 
- 
+1.1 Release Notes:
+
+1. Added shell task that will allow task commands to operate within a shell
+2. Added TaskPackage support that allows tasks to be composed and executed as a package/group
+  
 
 
 	

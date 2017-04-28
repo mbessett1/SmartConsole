@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 
 namespace Bessett.SmartConsole
 {
+
+    public class TaskResult
+    {
+        public bool IsSuccessful { get; set; }
+        public int ResultCode { get; set; }
+        public string Message { get; set; }
+    }
+
     /// <summary>
     /// Base console task available via command line
     /// </summary>
@@ -114,8 +122,9 @@ namespace Bessett.SmartConsole
             var executionAuthorized = executionPreAuthorized;
             var isTaskValid = RequiredArgumentsPresent();
             
-            if (!GetType().NoConfirmation())
-                WriteArguments();
+            // Can't assume the user wants to write the arguments in an override
+            //if (!GetType().NoConfirmation())
+            //    WriteArguments();
             
             if (isTaskValid)
             {
@@ -138,6 +147,17 @@ namespace Bessett.SmartConsole
         /// Function called once all validation and confirmation complete
         /// </summary>
         public virtual void Start() { }
+
+        public virtual TaskResult StartTask()
+        {
+            // if we get here, the methos was not overridden
+            Start();
+            return new TaskResult()
+            {
+                IsSuccessful = true,
+                Message = "StartTask() not defined."
+            };
+        }
 
         /// <summary>
         /// Echo all arguments

@@ -18,11 +18,43 @@ namespace Bessett.SmartConsole
 
         }
 
+        internal static List<Type> GetTypes<T>()
+        {
+            var baseType = typeof(T);
+
+            var internalTasks = Assembly.GetCallingAssembly().GetTypes()
+                .Where(t => t.IsClass
+                            && !t.IsAbstract //
+                            && t.IsSubclassOf(baseType)
+                            );
+
+            var definedTasks = Assembly.GetEntryAssembly().GetTypes()
+                .Where(t => t.IsClass
+                            && !t.IsAbstract
+                            && t.IsSubclassOf(baseType)
+                            );
+
+            var types = internalTasks.ToList();
+            types.AddRange(definedTasks.ToList());
+
+            return types;
+        }
+
+        internal static void BuildAvailableTasks()
+        {
+            AllTasks = GetTypes<ConsoleTask>();
+        }
+
         internal static void BuildAvailableTasks(string baseTypeName)
         {
+            
             BaseTaskTypeName = baseTypeName;
-            Type baseType = typeof(ConsoleTask);
+            Type baseType = Type.GetType(baseTypeName);
+            BuildAvailableTasks(baseType);
+        }
 
+        internal static void BuildAvailableTasks(Type baseType)
+        {
             var internalTasks = Assembly.GetCallingAssembly().GetTypes()
                 .Where(t => t.IsClass
                             && !t.IsAbstract //
@@ -41,9 +73,12 @@ namespace Bessett.SmartConsole
             AllTasks = tasks;
         }
 
-        internal static void BuildAvailableTasks(Type baseType)
+        public static ConsoleTask ToConsoleTask(this string[] args)
         {
-            BuildAvailableTasks(baseType.Name);
+            var taskname = args.Length > 0 ? args[0] : "help";
+
+            var taskInstance = GetTaskInstance<ConsoleTask>(taskname, args);
+            return taskInstance;
         }
 
         internal static Type GetTask(string taskName)
