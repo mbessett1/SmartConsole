@@ -11,7 +11,7 @@ namespace Bessett.SmartConsole
         static PackageLibrary()
         {
             // get all pacakges into an available list
-            _packages = TaskLibrary.GetTypes<TaskPackage>();
+            _packages = TaskLibrary.GetTypes<TaskPackage>().Where(t => t.GetConstructor(Type.EmptyTypes) != null).ToList();
         }
 
         public static IEnumerable<Type> ListAll()
@@ -23,7 +23,10 @@ namespace Bessett.SmartConsole
         }
         public static TaskPackage GetPackage(string name)
         {
-            return (TaskPackage)Activator.CreateInstance(_packages.FirstOrDefault(p => p.Name == name));
+            var packageType = _packages.FirstOrDefault(p => p.Name == name);
+            return (packageType != null)
+                ? (TaskPackage) Activator.CreateInstance(packageType)
+                : null;
         }
 
     }

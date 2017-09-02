@@ -17,10 +17,11 @@ namespace Bessett.SmartConsole.Tasks
             // and over
 
             string command;
+            const string helpCommand = "help -Usagetext \"SHELL Usage: <Task Name> [task options]\n\"";
 
-            Console.WriteLine("Smart Console Shell\n");
-            Console.WriteLine("'exit' to quit");
-            Console.Write("'?' for help\n");
+            Console.WriteLine($"{System.AppDomain.CurrentDomain.FriendlyName} Shell\n");
+            Console.WriteLine("'exit', 'quit' or 'q' to quit");
+            Console.WriteLine("'?' or 'help' for help\n");
 
             do
             {
@@ -30,14 +31,19 @@ namespace Bessett.SmartConsole.Tasks
                 if (command.ToLower() == "quit") break;
                 if (command.ToLower() == "q") break;
                 if (command.ToLower() == "exit") break;
-                if (command.Equals("?")) command = "Help";
+
+                // augment requests for help
+                if (
+                    command.Equals("?") ||
+                    command.ToLower().Equals("help")) command = helpCommand;
 
                 if (command.Length > 0)
                 {
-                    var args = ConsoleProgram.ParseCommand(command);
+                    var args = ConsoleProgram.BuildCommand(command);
                     var result = ConsoleProgram.StartTask(args);
 
-                    Console.WriteLine($"\nResult {result.ResultCode}: {result.Message}\n");
+                    if(!string.IsNullOrEmpty(result.Message))
+                        Console.WriteLine($"[{result.ResultCode}]:\n{result.Message}\n");
                 }
 
             } while (true);

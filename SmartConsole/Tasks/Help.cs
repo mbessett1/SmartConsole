@@ -13,6 +13,8 @@ namespace Bessett.SmartConsole.Tasks
         [DefaultArgument, ArgumentHelp]
         public string TaskName { get; set; }
 
+        public string UsageText { get; set; } = $"Usage: {System.AppDomain.CurrentDomain.FriendlyName} <Task Name> [task options]\n";
+
         public override void Start()
         {
             var helpTask = TaskLibrary.GetTask(TaskName);
@@ -39,22 +41,29 @@ namespace Bessett.SmartConsole.Tasks
                 taskObject.HelpName,
                 taskObject.HelpDescription);
 
-            Console.Write("\nSyntax:\n{0} {1}\n",
+            Console.Write("\nSyntax:\n   {0} {1}\n",
                 taskObject.HelpName,
                 MemberSyntax(arguments)
                 );
 
-            Console.WriteLine("\nParameters:");
-
-            foreach (var arg in arguments)
+            if (arguments.Any())
             {
-                Console.WriteLine(ArgumentSyntax(arg));
+                Console.WriteLine("\nParameters:");
+
+                foreach (var arg in arguments)
+                {
+                    Console.WriteLine(ArgumentSyntax(arg));
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nNo Parameters");
             }
         }
 
         private void ShowGenericHelp()
         {
-            Console.WriteLine("Usage: {0} <Task Name> [task options]\n", System.AppDomain.CurrentDomain.FriendlyName);
+            Console.WriteLine(UsageText);
             Console.WriteLine("Tasks Available:\n");
 
             foreach (var task in TaskLibrary.AllTasks)

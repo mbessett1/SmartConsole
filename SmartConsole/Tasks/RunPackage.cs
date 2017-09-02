@@ -8,7 +8,7 @@ namespace Bessett.SmartConsole.Tasks
         [ArgumentHelp("Package Name")]
         public string Name { get; set; }
 
-        [ArgumentHelp("Package File Name (xml or json)")]
+        [ArgumentHelp("Package File Name (command script)")]
         public string Filename { get; set; }
 
         private TaskPackage package;
@@ -27,6 +27,14 @@ namespace Bessett.SmartConsole.Tasks
                     //activate & load the package
                     Console.WriteLine($"Activating Package {Name}");
                     package = PackageLibrary.GetPackage(Name);
+                    if (package == null)
+                    {
+                        Console.WriteLine($"Package [{Name}] not found. GetPackages to view available packages.");
+                        // run GetPackages for the user
+
+
+                        return false;
+                    }
                 }
             }
             else
@@ -45,10 +53,14 @@ namespace Bessett.SmartConsole.Tasks
             {
                 foreach (var task in package.GetTasks())
                 {
-                    result = task.StartTask();
-                    if (!result.IsSuccessful)
+                    task.Silent = Silent;
+                    if (task.ConfirmStart())
                     {
-                        break;
+                        result = task.StartTask();
+                        if (!result.IsSuccessful)
+                        {
+                            break;
+                        }
                     }
                 }
 

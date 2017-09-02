@@ -143,19 +143,26 @@ namespace Bessett.SmartConsole
         /// </summary>
         public virtual void Complete() { }
 
-        /// <summary>
-        /// Function called once all validation and confirmation complete
+        /// <summary> 
+        /// Deprecate in favor of StartTask, which returns a result
+        /// if StartTask() is not overridden, a call Start() is automatic
+        /// and generates a generic artificial successful message.
         /// </summary>
         public virtual void Start() { }
 
+        /// <summary>
+        /// Function called once all validation and confirmation complete
+        /// </summary>
+        /// <returns></returns>
         public virtual TaskResult StartTask()
         {
-            // if we get here, the methos was not overridden
+            // if we get here, this method was not overridden, so call Start() and
+            // hope for the best :)
             Start();
             return new TaskResult()
             {
                 IsSuccessful = true,
-                Message = "StartTask() not defined."
+                Message = ""
             };
         }
 
@@ -164,7 +171,7 @@ namespace Bessett.SmartConsole
         /// </summary>
         protected void WriteArguments()
         {
-            Console.WriteLine("\nArguments:");
+            Console.WriteLine();
             foreach (var arg in GetType().GetTaskArguments().Where(a=> a.PropertyInfo.Name != "Silent"))
             {
                 Console.WriteLine("  {0} = {1} ", arg.PropertyInfo.Name, arg.PropertyInfo.GetValue(this));

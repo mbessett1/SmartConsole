@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Bessett.SmartConsole
 {
@@ -14,12 +16,11 @@ namespace Bessett.SmartConsole
 
             Console.WriteLine($"Reading Package from {filename}");
             try
-            {   // Open the text file using a stream reader.
-                using (StreamReader sr = new StreamReader(Filename))
+            {
+                foreach (var line in File.ReadAllLines(Filename).Where(t => t.Trim().Any()))
                 {
-                    string line = sr.ReadToEnd();
-                    var args = ConsoleProgram.ParseCommand(line);
-                    base.AddTask( args.ToConsoleTask());
+                    var args = ConsoleProgram.BuildCommand(line);
+                    AddTask(args.ToConsoleTask());
                 }
             }
             catch (Exception e)

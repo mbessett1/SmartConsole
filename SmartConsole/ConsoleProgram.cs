@@ -14,18 +14,18 @@ namespace Bessett.SmartConsole
 {
     public class ConsoleProgram
     {
-        public static TaskResult Start(string[] args)
+        public static TaskResult Start(string[] args, string defaultTask = "shell")
         {
-            return Start(args, typeof(ConsoleTask));
+            return Start(args, typeof(ConsoleTask), defaultTask);
         }
 
-        public static TaskResult Start(string[] args, Type baseTaskType)
+        public static TaskResult Start(string[] args, Type baseTaskType, string defaultTask = "shell")
         {
             Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
 
             TaskLibrary.BuildAvailableTasks(baseTaskType);
 
-            string[] validArgs = args.Length > 0 ? args : new string[] { "help" };
+            string[] validArgs = args.Length > 0 ? args : new string[] { defaultTask };
 
             var result  = StartTask(validArgs);
 
@@ -37,7 +37,7 @@ namespace Bessett.SmartConsole
             return result;
         }
 
-        public static string[] ParseCommand(string args)
+        internal static string[] BuildCommand(string args)
         {
             var result = new List<string>();
 
@@ -87,9 +87,9 @@ namespace Bessett.SmartConsole
             return consoleInfo;
         }
 
-        internal static TaskResult StartTask(string[] args)
+        internal static TaskResult StartTask(string[] args, string defaultTask = "shell")
         {
-            var taskname = args.Length > 0 ? args[0] : "help";
+            var taskname = args.Length > 0 ? args[0] : defaultTask;
             var taskInstance = args.ToConsoleTask();
 
             if (taskInstance != null)
@@ -106,8 +106,27 @@ namespace Bessett.SmartConsole
             {
                 if (taskInstance.ConfirmStart())
                 {
+                    var clock = new Stopwatch();
+                    clock.Start();
                     var result = taskInstance.StartTask();
                     taskInstance.Complete();
+                    if (clock.Elapsed.Hours > 1)
+                    {
+                        Console.WriteLine($"Completed in {clock.Elapsed}");
+                    }
+                    else if(clock.Elapsed.TotalSeconds > 60)
+                    {
+                        Console.WriteLine($"Completed in {clock.Elapsed.TotalMinutes:f3} minutes");
+                    }
+                    else if (clock.Elapsed.TotalSeconds > 60)
+                    {
+                        Console.WriteLine($"Completed in {clock.Elapsed.TotalSeconds:f3} seconds");
+                    }
+                    else 
+                    {
+                        Console.WriteLine($"Completed in {clock.Elapsed.TotalMilliseconds:f3} msec");
+                    }
+
                     return result;
                 }
                 return BadResult(-1, "Unable to confirm task to start.");
@@ -125,6 +144,5 @@ namespace Bessett.SmartConsole
             };
         }
  
-
     }
 }
