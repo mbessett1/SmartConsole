@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -69,6 +70,19 @@ namespace Bessett.SmartConsole
                     yield return argument;
             }
 
+        }
+
+        public static string TaskAlias(this Type task)
+        {
+            var taskAliasAttr = task.GetCustomAttributes(true)
+                .Where(a => a is TaskAlias).FirstOrDefault();
+
+            if (taskAliasAttr != null)
+            {
+                var taskAlias = (TaskAlias) taskAliasAttr;
+                return taskAlias.AliasName;
+            }
+            return task.Name;
         }
     }
 }

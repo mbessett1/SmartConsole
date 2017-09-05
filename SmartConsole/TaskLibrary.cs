@@ -15,7 +15,7 @@ namespace Bessett.SmartConsole
         static TaskLibrary()
         {
             AllTasks = new List<Type>();
-
+            AddTaskFromMethod();
         }
 
         internal static List<Type> GetTypes<T>()
@@ -69,7 +69,7 @@ namespace Bessett.SmartConsole
 
             var tasks = internalTasks.ToList();
             tasks.AddRange(definedTasks.ToList());
-
+            tasks.AddRange(DynamicTasks.Types);
             AllTasks = tasks;
         }
 
@@ -85,7 +85,7 @@ namespace Bessett.SmartConsole
         {
             if (taskName != null)
             {
-                var taskSpecified = AllTasks.FirstOrDefault(t => t.Name.ToLower() == taskName.ToLower());
+                var taskSpecified = AllTasks.FirstOrDefault(t => t.TaskAlias().ToLower() == taskName.ToLower());
                 return taskSpecified;
             }
             return null;
@@ -135,5 +135,14 @@ namespace Bessett.SmartConsole
 
         }
 
+        // Build Task from Method (using TypeBuilder)
+
+        internal static void AddTaskFromMethod()
+        {
+            
+        }
     }
+
+    
+
 }

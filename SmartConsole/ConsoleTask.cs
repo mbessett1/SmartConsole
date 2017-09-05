@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,6 +14,19 @@ namespace Bessett.SmartConsole
         public bool IsSuccessful { get; set; }
         public int ResultCode { get; set; }
         public string Message { get; set; }
+
+        public static TaskResult Complete(string message = "", int resultCode = 0)
+        {
+            return new TaskResult() { IsSuccessful = true, Message = message, ResultCode = resultCode };
+        }
+        public static TaskResult Failed(string message , int resultCode = 0)
+        {
+            return new TaskResult() { IsSuccessful = false, Message = message, ResultCode = resultCode };
+        }
+        public static TaskResult Exception(Exception ex)
+        {
+            return new TaskResult() { IsSuccessful = true, Message = ex.Message, ResultCode = ex.HResult };
+        }
     }
 
     /// <summary>

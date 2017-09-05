@@ -24,11 +24,11 @@ namespace Bessett.SmartConsole
     /// <summary>
     /// Provide an alternate Command text besides the class name
     /// </summary>
-    public class Alias : Attribute
+    public class TaskAlias : Attribute
     {
         public string AliasName { get; set; }
 
-        public Alias(string aliasName)
+        public TaskAlias(string aliasName)
         {
             AliasName = aliasName;
         }

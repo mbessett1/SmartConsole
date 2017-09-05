@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SmartConsole.Test.Tasks
 {
-    public class Test1:ConsoleTask
+    public class Test1 : ConsoleTask
     {
         public override void Complete()
         {
@@ -17,6 +17,22 @@ namespace SmartConsole.Test.Tasks
         public override void Start()
         {
             Console.WriteLine("Test1 executing");
+        }
+    }
+
+    [TaskAlias("get-test1")]
+    public class AliasTest : ConsoleTask
+    {
+        public override void Complete()
+        {
+            Console.WriteLine($"Alias TEST complete.");
+        }
+
+        public override TaskResult StartTask()
+        {
+            Console.WriteLine($"Alias TEST executing...");
+
+            return TaskResult.Complete();
         }
     }
 }
