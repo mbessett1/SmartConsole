@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Security.Policy;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.SqlServer.Server;
 
@@ -23,83 +24,29 @@ namespace Bessett.SmartConsole
 
     public static class DynamicTasks
     {
+        private static List<PortableExecutableReference> ReferenceAssembies = new List<PortableExecutableReference>();
+
         private const string assemblyName = "DynamicTasks";
         private static List<TaskBuilder> TaskBuilders { get; set; } = new List<TaskBuilder>();
          
         public static List<Type> Types { get; private set; } = new List<Type>();
 
-        public static void POC()
+        static DynamicTasks()
         {
-            var dynamicTask =
-                @"
-using Bessett.SmartConsole;
-
-namespace SmartConsole.Test.Tasks
-{
-    [NoConfirmation]
-    [TaskHelp(""Testing Dynamic Task creation"")]
-    public class GenTask : ConsoleTask
-    {
-        [ArgumentHelp]
-        public string Source { get; set; }
-        [ArgumentHelp]
-        public string Name { get; set; }
-
-        public override TaskResult StartTask()
-        {
-            return TaskResult.Complete($""{ Name} has completed successfully {Source}"");
-        }
-    }
-}
-";
-
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(dynamicTask);
-
-            string assemblyName = Path.GetRandomFileName();
-            MetadataReference[] references = new MetadataReference[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(ConsoleTask).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
-            };
-
-            CSharpCompilation compilation = CSharpCompilation.Create(
-                assemblyName,
-                syntaxTrees: new[] { syntaxTree },
-                references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-
-            using (var ms = new MemoryStream())
-            {
-                EmitResult result = compilation.Emit(ms);
-
-                if (!result.Success)
-                {
-                    IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
-                        diagnostic.IsWarningAsError ||
-                        diagnostic.Severity == DiagnosticSeverity.Error);
-
-                    foreach (Diagnostic diagnostic in failures)
-                    {
-                        Console.Error.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} ({diagnostic.ToString()})");
-                    }
-                }
-                else
-                {
-                    ms.Seek(0, SeekOrigin.Begin);
-                    Assembly assembly = Assembly.Load(ms.ToArray());
-                    Types.AddRange(assembly.GetTypes()
-                        .Where(t => t.IsClass
-                            && !t.IsAbstract
-                            && t.IsSubclassOf(typeof(ConsoleTask))
-                            )
-                            );
-                }
-            }
+            // add default assemblies
+            ReferenceAssembies.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+            ReferenceAssembies.Add(MetadataReference.CreateFromFile(typeof(ConsoleTask).Assembly.Location));
+            ReferenceAssembies.Add(MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location));
         }
 
-        static DynamicTasks() { }
+        public static void AddReference(Assembly assembly)
+        {
+            ReferenceAssembies.Add(MetadataReference.CreateFromFile(assembly.Location));
+        }
+        public static void AddReferenceFromType(Type type)
+        {
+            ReferenceAssembies.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
+        }
 
         public static TaskBuilder AddConsoleTask(string name) 
         {
@@ -115,7 +62,7 @@ namespace SmartConsole.Test.Tasks
             TaskBuilders.Add(tb);
             return tb;
         }
-        public static void CreateDynamic()
+        public static void CreateDynamic(params Type[] referenceTypes)
         {
             List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
             foreach (var typeBuilder in TaskBuilders)
@@ -123,20 +70,18 @@ namespace SmartConsole.Test.Tasks
                 syntaxTrees.Add( CSharpSyntaxTree.ParseText(typeBuilder.ToCode()) );
             }
 
-            // SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(dynamicTask);
-
             string assemblyName = Path.GetRandomFileName();
-            MetadataReference[] references = new MetadataReference[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(ConsoleTask).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
-            };
+            
+            var references = 
+                referenceTypes
+                    .Select(r => MetadataReference.CreateFromFile(r.GetType().Assembly.Location)).ToList();
+
+            ReferenceAssembies.AddRange(references);
 
             CSharpCompilation compilation = CSharpCompilation.Create(
                 assemblyName,
                 syntaxTrees: syntaxTrees,
-                references: references,
+                references: ReferenceAssembies,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
 
@@ -165,8 +110,7 @@ namespace SmartConsole.Test.Tasks
                         .Where(t => t.IsClass
                             && !t.IsAbstract
                             && t.IsSubclassOf(typeof(ConsoleTask))
-                            )
-                            );
+                            ));
                 }
             }
         }
@@ -195,14 +139,38 @@ namespace SmartConsole.Test.Tasks
         //        CreateTask(methodInfo, taskName);
         //    }
         //}
-        //public TaskBuilder (Type targetType, string methodName, string taskAlias = "")
-        //{
-        //    var targetMethod = targetType.GetMethods().FirstOrDefault();
-        //    if (targetMethod != null)
-        //        CreateTask(targetMethod, taskAlias);
+        public TaskBuilder UseMethod (Type targetType, string methodName)
+        {
+            var targetMethod = targetType.GetMethods().FirstOrDefault();
+            if (targetMethod != null)
+            {
+                GeneratePropertiesFromMethod(targetMethod);
 
-        //}
+                var isDisposable = targetType.GetInterfaces().Contains(typeof(IDisposable));
 
+                var varName = "target";
+                // build calling signature
+                var codeBlock = new CodeBuilder()
+                    .Line($"var {varName} = new {targetType.FullName}();")
+                    .Line($"{varName}.{targetMethod.Name}({string.Join(",", builder.Properties.Select(p => p.Name).ToList())});")
+                    .Line($"return TaskResult.Complete();");
+                
+                StartTaskBody(codeBlock );
+
+                // make sure this Type is referenced
+                DynamicTasks.AddReferenceFromType(targetType);
+            }
+            return this;
+        }
+
+        private TaskBuilder GeneratePropertiesFromMethod(MethodInfo method)
+        {
+            foreach (var parameterInfo in method.GetParameters())
+            {
+                AddProperty(parameterInfo.Name, parameterInfo.ParameterType);
+            }
+            return this;
+        }
         public TaskBuilder(string name, Type baseType)
         {
             builder =  new ClassBuilder("Dynamics", name,TypeAttributes.Public, baseType)
@@ -210,6 +178,11 @@ namespace SmartConsole.Test.Tasks
                 .WithUsing("Bessett.SmartConsole"); 
         }
 
+        public TaskBuilder WithUsing(string usingNamespace)
+        {
+            builder.WithUsing(usingNamespace);
+            return this;
+        }
         public TaskBuilder HasAlias(string aliasName)
         {
             builder = builder.WithAttribute($"TaskAlias(\"{aliasName}\")");
@@ -226,23 +199,23 @@ namespace SmartConsole.Test.Tasks
             builder.WithAttribute($"NoConfirmation");
             return this;
         }
-
-        public TaskBuilder StartTaskBody(string code)
+        
+        public TaskBuilder StartTaskBody(CodeBuilder codeBlock)
         {
             // create the startTask method and body
-            builder = builder.WithMethod( 
-                new MethodBuilder("StartTask", typeof(TaskResult), TypeAttributes.Public, true )
-                .WithCodeStatement(code)
-            );
+            builder.WithMethod(
+                new MethodBuilder("StartTask", typeof(TaskResult), TypeAttributes.Public, true)
+                .WithCodeLines(codeBlock)
+                );
 
             return this;
         }
-        public TaskBuilder ConfirmStartBody(string code)
+        public TaskBuilder ConfirmStartBody(CodeBuilder codeLines)
         {
             // create the startTask method and body
             builder = builder.WithMethod(
                 new MethodBuilder("ConfirmStart", typeof(bool), TypeAttributes.Public, true)
-                .WithCodeStatement(code)
+                .WithCodeLines(codeLines)
             );
             return this;
         }
@@ -308,46 +281,68 @@ namespace SmartConsole.Test.Tasks
             //Add(typeBuilder);
             ////Microsoft.CodeAnalysis.CSharp.SyntaxFactory.PropertyDeclaration()
         }
-        
-        /// <summary>
-        /// Define types from builder in VirtualTasks virtual assembly
-        /// </summary>
 
         #region Internal Class building support (refactor later)
-        internal abstract class CodeBuilder
+
+        public class CodeBuilder
         {
-            private readonly char TabChar =  ' ';  
+            private readonly char TabChar = ' ';
             private readonly int TabLevelSize = 3;
-            protected StringBuilder builder = new StringBuilder();
+
+            private List<string> CodeLines = new List<string>();
+
+            public CodeBuilder Line(string codeLine)
+            {
+                CodeLines.Add(codeLine);
+                return this;
+            }
+
+            public CodeBuilder Lines(CodeBuilder codeLines)
+            {
+                CodeLines.AddRange(codeLines.CodeLines);
+                return this;
+            }
 
             protected string Tab(int level)
             {
                 return new string(TabChar, level * TabLevelSize);
             }
-            public string DisposePattern(string iterationVariable, Type disposableType, string newDeclaration, string codeText)
+
+            public CodeBuilder DisposePattern(string iterationVariable, Type disposableType, string newDeclaration, CodeBuilder codeText)
             {
-                return $"using (var {iterationVariable} = new {disposableType.Name}({newDeclaration}))\n{{\n{codeText}\n}}";
+                var builder = new CodeBuilder();
+
+                builder
+                    .Line($"using (var {iterationVariable} = new  {disposableType.Name}({newDeclaration}))")
+                    .Line("{")
+                    .Line(codeText.ToCode(1))
+                    .Line("}")
+                    ;
+
+                return builder;
             }
 
-            public string TryCatchPattern(string tryBlock, string catchBlock)
+            public CodeBuilder TryCatchPattern(CodeBuilder tryBlock, CodeBuilder catchBlock)
             {
-                string pattern = 
-                    @"
-try 
-{
-{tryBlock}
-}
-catch (Exception ex)
-{
-{catchblock}
-}
-";
-                return pattern.Replace("{tryBlock}", tryBlock).Replace("{tryBlock}", tryBlock);
+                var builder = new CodeBuilder();
+
+                builder
+                    .Line("try")
+                    .Line("{")
+                    .Line(tryBlock.ToCode(1))
+                    .Line("}")
+                    .Line("catch(Exception ex)")
+                    .Line("{")
+                    .Line(catchBlock.ToCode(1))
+                    .Line("}")
+                    ;
+
+                return builder;
             }
 
             public virtual string ToCode(int indentLevel = 0)
             {
-                return $"{Tab(indentLevel)}{builder.ToString()}";
+                return $"{Tab(indentLevel)}{string.Join("\n", CodeLines)}";
             }
         }
 
@@ -356,7 +351,7 @@ catch (Exception ex)
             private List<string> Usings { get; set; } = new List<string>();
             private List<AttributeBuilder> Attributes { get; set; } = new List<AttributeBuilder>();
             protected List<MethodBuilder> Methods { get; set; } = new List<MethodBuilder>();
-            protected List<PropertyBuilder> Properties { get; set; } = new List<PropertyBuilder>();
+            public List<PropertyBuilder> Properties { get; private set; } = new List<PropertyBuilder>();
             private string Name { get; set; }
             private string NamespaceDeclaration { get; set; }
             private Type BaseClass { get; set; }
@@ -468,10 +463,10 @@ catch (Exception ex)
 
         internal class PropertyBuilder: CodeBuilder
         {
-            private List<AttributeBuilder> Attributes { get; set; } = new List<AttributeBuilder>();
-            private string Scope { get; set; } = "public";
-            private string Name { get; set; }
-            private Type DataType { get; set; }
+            public List<AttributeBuilder> Attributes { get; private set; } = new List<AttributeBuilder>();
+            public string Scope { get; private set; } = "public";
+            public string Name { get; private set; }
+            public Type DataType { get; private set; }
 
             public PropertyBuilder(string name, Type dataType, string scope = "public")
             {
@@ -539,7 +534,9 @@ catch (Exception ex)
             protected Type DataType { get; set; }
             protected bool IsOverride { get; set; }
             protected TypeAttributes TypeAttribute { get; set; }
-            protected string CodeText { get; set; } = "";
+            protected CodeBuilder BodyBlock { get; set; } = new CodeBuilder();
+
+            //protected List<string> CodeLines { get; set; } = new List<string>();
 
             public MethodBuilder (string name, Type returnType, TypeAttributes typeAttribute, bool isOverride)
             {
@@ -562,35 +559,42 @@ catch (Exception ex)
 
             public MethodBuilder WithCodeStatement(string codeLine)
             {
-                CodeText += codeLine;
+                BodyBlock.Line(codeLine);
+                return this;
+            }
+
+            public MethodBuilder WithCodeLines(CodeBuilder codeBlock)
+            {
+                BodyBlock.Lines(codeBlock);
                 return this;
             }
 
             public override string ToCode(int indentLevel = 0)
             {
                 string t =Tab(indentLevel);
-                StringBuilder codeBuilder = new StringBuilder();
+
+                CodeBuilder codeBuilder = new CodeBuilder();
 
                 foreach (var attr in Attributes)
                 {
-                    codeBuilder.AppendLine(attr.ToCode(indentLevel));
+                    codeBuilder.Line(attr.ToCode(indentLevel));
                 }
 
                 // build signature
-                codeBuilder.Append($"{t}public {(IsOverride ? "override " : "")}{DataType.Name} {Name} (");
+                codeBuilder.Line($"{t}public {(IsOverride ? "override " : "")}{DataType.Name} {Name} (");
 
                 //insert parameters
-                codeBuilder.Append(string.Join(",", Parameters.Select(p=>  $"{p.DataType.Name} {p.Name}") ));
+                codeBuilder.Line(string.Join(",", Parameters.Select(p=>  $"{p.DataType.Name} {p.Name}") ));
 
-                codeBuilder.AppendLine(")");
+                codeBuilder.Line(")");
 
                 // body
-                codeBuilder.AppendLine($"{t}{{");
+                codeBuilder.Line($"{t}{{");
 
                 //todo - fix codelines
-                codeBuilder.AppendLine($"{t}   {CodeText}");
+                codeBuilder.Lines(BodyBlock);
 
-                codeBuilder.AppendLine($"{t}}}");
+                codeBuilder.Line($"{t}}}");
 
                 return codeBuilder.ToString();
             }
