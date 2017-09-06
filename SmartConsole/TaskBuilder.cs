@@ -24,10 +24,13 @@ namespace Bessett.SmartConsole
 
     public static class DynamicTasks
     {
+        // See: http://comealive.io/Syntax-Factory-Vs-Parse-Text/
+        // https://roslynquoter.azurewebsites.net/
+        
         private static List<PortableExecutableReference> ReferenceAssembies = new List<PortableExecutableReference>();
 
         private const string assemblyName = "DynamicTasks";
-        private static List<TaskBuilder> TaskBuilders { get; set; } = new List<TaskBuilder>();
+        private static Dictionary<string, TaskBuilder> TaskBuilders { get; set; } = new Dictionary<string, TaskBuilder>();  
          
         public static List<Type> Types { get; private set; } = new List<Type>();
 
@@ -51,7 +54,7 @@ namespace Bessett.SmartConsole
         public static TaskBuilder AddConsoleTask(string name) 
         {
             var tb = new TaskBuilder(name, typeof(ConsoleTask));
-            TaskBuilders.Add(tb);
+            TaskBuilders.Add(name, tb);
             return tb;
         }
 
@@ -59,16 +62,26 @@ namespace Bessett.SmartConsole
         {
             Type targetBaseType = typeof(T);
             var tb = new TaskBuilder(name, targetBaseType);
-            TaskBuilders.Add(tb);
+            TaskBuilders.Add(name, tb);
             return tb;
         }
-        public static void CreateDynamic(params Type[] referenceTypes)
+        public static TaskBuilder AddConsoleTask(TaskBuilder tb) 
+        {
+            TaskBuilders.Add(tb.Name, tb);
+            return tb;
+        }
+
+        public static List<Diagnostic> CreateDynamic(params Type[] referenceTypes)
         {
             List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
-            foreach (var typeBuilder in TaskBuilders)
+            foreach (var typeBuilder in TaskBuilders.Values)
             {
-                syntaxTrees.Add( CSharpSyntaxTree.ParseText(typeBuilder.ToCode()) );
+                var syntaxTree = CSharpSyntaxTree.ParseText(typeBuilder.ToCode());
+                syntaxTrees.Add(syntaxTree);
             }
+
+            // clear out the builder source
+            TaskBuilders.Clear();
 
             string assemblyName = Path.GetRandomFileName();
             
@@ -84,6 +97,7 @@ namespace Bessett.SmartConsole
                 references: ReferenceAssembies,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
+            var diagnostics = new List<Diagnostic>();
 
             using (var ms = new MemoryStream())
             {
@@ -92,13 +106,10 @@ namespace Bessett.SmartConsole
                 if (!result.Success)
                 {
                     IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
-                        diagnostic.IsWarningAsError ||
+                        diagnostic.IsWarningAsError || 
                         diagnostic.Severity == DiagnosticSeverity.Error);
 
-                    foreach (Diagnostic diagnostic in failures)
-                    {
-                        Console.Error.WriteLine($"{diagnostic.Id}: {diagnostic.GetMessage()} ({diagnostic.ToString()})");
-                    }
+                    diagnostics.AddRange(failures);
                 }
                 else
                 {
@@ -113,6 +124,13 @@ namespace Bessett.SmartConsole
                             ));
                 }
             }
+            return diagnostics;
+        }
+
+        public static string BuildString(this List<Diagnostic> failures)
+        {
+            return
+                string.Join("\n", failures.Select(d => $"{d.Id}: {d.GetMessage()} ({d.ToString()})"));
         }
     }
 
@@ -123,6 +141,9 @@ namespace Bessett.SmartConsole
     public sealed class TaskBuilder
     {
         ClassBuilder builder;
+
+        public string Name { get; private set; }
+        public Type TargetType { get; private set; }
 
         /// <summary>
         /// Build a console task for every method in the class
@@ -147,15 +168,23 @@ namespace Bessett.SmartConsole
                 GeneratePropertiesFromMethod(targetMethod);
 
                 var isDisposable = targetType.GetInterfaces().Contains(typeof(IDisposable));
-
+                
                 var varName = "target";
                 // build calling signature
-                var codeBlock = new CodeBuilder()
-                    .Line($"var {varName} = new {targetType.FullName}();")
+                var innerCodeBlock = new CodeBuilder() 
                     .Line($"{varName}.{targetMethod.Name}({string.Join(",", builder.Properties.Select(p => p.Name).ToList())});")
                     .Line($"return TaskResult.Complete();");
+
+                CodeBuilder codeBlock = (isDisposable)
+                    ? CodeBuilder.UseDisposePattern(varName, targetType, "", innerCodeBlock)
+                    : CodeBuilder.NewObject(varName, targetType, "")
+                        .Lines(innerCodeBlock);
                 
-                StartTaskBody(codeBlock );
+                var tryCatchBlock = CodeBuilder.UseTryCatchPattern(
+                    codeBlock,
+                    new CodeBuilder().Line($"return TaskResult.Exception(ex);"));
+
+                StartTaskBody(tryCatchBlock);
 
                 // make sure this Type is referenced
                 DynamicTasks.AddReferenceFromType(targetType);
@@ -173,6 +202,9 @@ namespace Bessett.SmartConsole
         }
         public TaskBuilder(string name, Type baseType)
         {
+            Name = name;
+            TargetType = baseType;
+
             builder =  new ClassBuilder("Dynamics", name,TypeAttributes.Public, baseType)
                 .WithUsing("System")
                 .WithUsing("Bessett.SmartConsole"); 
@@ -213,7 +245,7 @@ namespace Bessett.SmartConsole
         public TaskBuilder ConfirmStartBody(CodeBuilder codeLines)
         {
             // create the startTask method and body
-            builder = builder.WithMethod(
+            builder.WithMethod(
                 new MethodBuilder("ConfirmStart", typeof(bool), TypeAttributes.Public, true)
                 .WithCodeLines(codeLines)
             );
@@ -246,109 +278,144 @@ namespace Bessett.SmartConsole
             return builder.ToCode();
         }
 
-        private void BuildFromMethod(MethodInfo methodInfo, string taskName, string taskAlias = "")
+        public string ToView()
         {
-            //ClassBuilder classBuilder = new ClassBuilder(
-            //            "DynmaicTasks",
-            //            taskName,
-            //            TypeAttributes.Public,
-            //            typeof(ConsoleTask)
-            //        )
-            //        .WithAttribute("TaskHelp")
-            //    ;
-           
-
-            //// Add Task attributes
-            //// Add properties for each mamber argument
-            //foreach (var arg in methodInfo.GetParameters())
-            //{
-            //classBuilder = classBuilder
-            //    .WithMethod(new MethodBuilder( )
-            //    .WithParameter()
-            //    classBuilder. (typeBuilder, arg.Name, arg.ParameterType);
-            //    )
-            //    ;
-            //}
-            //// build ovveride for StartTask, ConfirmStart
-            //// place any result into the TaskResult.Complete
-
-            //// this StartTask must 
-            //// 1. Instantiate the container/parent Type
-            //// 2. execute the method of the parent type 
-
-            //var parentType = methodInfo.DeclaringType;
-
-            //Add(typeBuilder);
-            ////Microsoft.CodeAnalysis.CSharp.SyntaxFactory.PropertyDeclaration()
+            return builder.ToCode();
         }
 
         #region Internal Class building support (refactor later)
-
-        public class CodeBuilder
+        public interface ICodeBuilder
         {
-            private readonly char TabChar = ' ';
-            private readonly int TabLevelSize = 3;
+            IEnumerable<string> GetLines { get; }
+            string ToCode(int indent = 0); 
+        }
 
-            private List<string> CodeLines = new List<string>();
+        public class CodeBuilder: ICodeBuilder
+        {
+             const char TabChar = ' ';
+             const int TabLevelSize = 3;
 
-            public CodeBuilder Line(string codeLine)
+            protected virtual List<string> CodeLines { get; set; } = new List<string>();
+
+            public virtual IEnumerable<string> GetLines
             {
-                CodeLines.Add(codeLine);
+                get { return CodeLines.AsEnumerable(); }
+            }
+
+            public CodeBuilder Line(string codeLine, int indent = 0)
+            {
+                CodeLines.Add($"{Tab(indent)}{codeLine}");
+                return this;
+            }
+            public CodeBuilder OpenScope()
+            {
+                CodeLines.Add("{");
+                return this;
+            }
+            public CodeBuilder CloseScope()
+            {
+                CodeLines.Add("}");
                 return this;
             }
 
-            public CodeBuilder Lines(CodeBuilder codeLines)
+            public CodeBuilder Lines(IEnumerable<ICodeBuilder> codeLines, int indent = 0)
             {
-                CodeLines.AddRange(codeLines.CodeLines);
+                foreach (ICodeBuilder codeBuilder in codeLines)
+                {
+                    Lines(codeBuilder, indent);
+                }
                 return this;
             }
 
-            protected string Tab(int level)
+            public CodeBuilder Lines(List<string> codeLines, int indent = 0)
+            {
+                CodeLines.AddRange(codeLines.Select(l => $"{Tab(indent)}{l}"));
+                return this;
+            }
+
+            public CodeBuilder Lines(ICodeBuilder codeLines, int indent = 0)
+            {
+                CodeLines.AddRange(codeLines.GetLines.Select(l => $"{Tab(indent)}{l}"));
+                return this;
+            }
+
+            public static string Tab(int level)
             {
                 return new string(TabChar, level * TabLevelSize);
             }
+            public static CodeBuilder Namespace(string namespaceName, CodeBuilder codeBlock)
+            {
+                var result = new CodeBuilder()
+                    .Line($"namespace {namespaceName}")
+                    .OpenScope()
+                    .Lines(codeBlock, 1)
+                    .CloseScope();
 
-            public CodeBuilder DisposePattern(string iterationVariable, Type disposableType, string newDeclaration, CodeBuilder codeText)
+                return result;
+            }
+
+            public static CodeBuilder UseDisposePattern(string disposableVar, Type disposableType, string newDeclaration, CodeBuilder codeText)
             {
                 var builder = new CodeBuilder();
 
                 builder
-                    .Line($"using (var {iterationVariable} = new  {disposableType.Name}({newDeclaration}))")
-                    .Line("{")
-                    .Line(codeText.ToCode(1))
-                    .Line("}")
+                    .Line($"using (var {disposableVar} = new  {disposableType.FullName}({newDeclaration}))")
+                    .OpenScope()
+                    .Lines(codeText,1)
+                    .CloseScope()
                     ;
 
                 return builder;
             }
 
-            public CodeBuilder TryCatchPattern(CodeBuilder tryBlock, CodeBuilder catchBlock)
+            public static CodeBuilder MethodSignature(string scope, string name, Type dataType, List<FieldInfo> parameters, bool IsOverride = false)
+            {
+                var builder = new CodeBuilder();
+                var signature = new StringBuilder()
+                    .Append($"{scope} {(IsOverride ? "override " : "")}{dataType.FullName} {name} (")
+                    .Append(string.Join(",", parameters.Select(p => $"{p.DataType.FullName} {p.Name}")))
+                    .Append(")");
+
+                builder.Line(signature.ToString());
+
+                return builder;
+
+            }
+            public static CodeBuilder UseTryCatchPattern(CodeBuilder tryBlock, CodeBuilder catchBlock, string exceptionVar = "ex")
             {
                 var builder = new CodeBuilder();
 
                 builder
                     .Line("try")
-                    .Line("{")
-                    .Line(tryBlock.ToCode(1))
-                    .Line("}")
-                    .Line("catch(Exception ex)")
-                    .Line("{")
-                    .Line(catchBlock.ToCode(1))
-                    .Line("}")
+                    .OpenScope()
+                    .Lines(tryBlock,1)
+                    .CloseScope()
+                    .Line($"catch(Exception {exceptionVar})")
+                    .OpenScope()
+                    .Lines(catchBlock,1)
+                    .CloseScope()
                     ;
 
                 return builder;
             }
 
+            public static CodeBuilder NewObject(string varName, Type targetType, string newDeclaration)
+            {
+                var builder = new CodeBuilder()
+                    .Line($"var {varName} = new {targetType.FullName}();");
+                return builder;
+
+            }
+
             public virtual string ToCode(int indentLevel = 0)
             {
-                return $"{Tab(indentLevel)}{string.Join("\n", CodeLines)}";
+                return $"{Tab(indentLevel)}{string.Join($"\n{Tab(indentLevel)}", GetLines)}";
             }
         }
 
-        internal class ClassBuilder : CodeBuilder
+        internal class ClassBuilder: CodeBuilder
         {
-            private List<string> Usings { get; set; } = new List<string>();
+            private CodeBuilder Usings { get; set; } = new CodeBuilder();
             private List<AttributeBuilder> Attributes { get; set; } = new List<AttributeBuilder>();
             protected List<MethodBuilder> Methods { get; set; } = new List<MethodBuilder>();
             public List<PropertyBuilder> Properties { get; private set; } = new List<PropertyBuilder>();
@@ -377,7 +444,7 @@ namespace Bessett.SmartConsole
             }
             public ClassBuilder WithUsing(string usingDeclaration)
             {
-                Usings.Add(usingDeclaration);
+                Usings.Line($"using {usingDeclaration};");
                 return this;
             }
             public ClassBuilder WithAttribute(string name, params object[] attrParams)
@@ -386,43 +453,27 @@ namespace Bessett.SmartConsole
                 return this;
             }
 
-            public override string ToCode(int indentLevel = 1)
-            {
-                string t = Tab(indentLevel);
-
-                StringBuilder codeBuilder = new StringBuilder();
-                foreach (var usingValue in Usings)
+            public override IEnumerable<string> GetLines {
+                get
                 {
-                    codeBuilder.AppendLine($"using {usingValue};");
+                    CodeLines.Clear();
+                    
+                    Lines(Usings);
+                    Lines(CodeBuilder.Namespace(
+                            NamespaceDeclaration,
+                            new CodeBuilder()
+                                .Lines(Attributes)
+                                .Line($"public class {Name} : {BaseClass}")
+                                .OpenScope()
+                                .Lines(Properties, 1)
+                                .Lines(Methods, 1)
+                                .CloseScope()
+                        ));
+                                    
+                    return CodeLines.AsEnumerable();
                 }
-
-                codeBuilder.AppendLine($"namespace {NamespaceDeclaration}");
-                codeBuilder.AppendLine($"{{");
-
-                foreach (var attr in Attributes)
-                {
-                    codeBuilder.AppendLine(attr.ToCode(indentLevel));
-                }
-
-                codeBuilder.AppendLine($"{t}public class {Name} : {BaseClass}");
-
-                codeBuilder.AppendLine($"{t}{{");
-
-                foreach (var propertyBuilder in Properties)
-                {
-                    codeBuilder.AppendLine(propertyBuilder.ToCode(indentLevel + 1));
-                }
-
-                foreach (var methodBuilder in Methods)
-                {
-                    codeBuilder.AppendLine(methodBuilder.ToCode(indentLevel + 1));
-                }
-                
-                codeBuilder.AppendLine($"{t}}}");
-                codeBuilder.AppendLine("}");
-
-                return codeBuilder.ToString();
             }
+
         }
 
         internal class AttributeBuilder : CodeBuilder
@@ -434,9 +485,11 @@ namespace Bessett.SmartConsole
             {
                 Name = name;
                 AttrParams = attrParams.ToList() ;
+
+                BuildAttruibuteCode();
             }
 
-            public override string ToCode(int indentLevel = 0)
+            private void BuildAttruibuteCode()
             {
                 List<string> attrParams = new List<string>();
                 string attrParamsExpanded = "";
@@ -447,7 +500,7 @@ namespace Bessett.SmartConsole
                     {
                         if (attrParam.GetType() == typeof(string))
                         {
-                            attrParams.Add( $"\"{attrParam}\"");
+                            attrParams.Add($"\"{attrParam}\"");
                         }
                         else
                         {
@@ -456,8 +509,10 @@ namespace Bessett.SmartConsole
                     }
                     attrParamsExpanded = $"({string.Join(",", attrParams)})";
                 }
-                return $"{Tab(indentLevel)}[{Name}{attrParamsExpanded}]";
 
+                var attribute = $"[{Name}{attrParamsExpanded}]";
+
+                CodeLines.Add(attribute);
             }
         } 
 
@@ -480,47 +535,26 @@ namespace Bessett.SmartConsole
                 Attributes.Add(new AttributeBuilder(name, attrParams));
                 return this;
             }
-            public override string ToCode(int indentLevel = 0)
-            {
-                string t = Tab(indentLevel);
-                StringBuilder codeBuilder = new StringBuilder();
-                foreach (var attr in Attributes)
-                {
-                    codeBuilder.AppendLine(attr.ToCode(indentLevel));
-                }
 
-                codeBuilder.Append($"{t}{Scope} {DataType.Name} {Name} ");
-                codeBuilder.Append("{get; set;}");
-                codeBuilder.AppendLine();
-                return codeBuilder.ToString();
+            public override IEnumerable<string> GetLines
+            {
+                get
+                {
+                    var signature = new StringBuilder()
+                        .Append($"{Scope} {DataType.Name} {Name} ")
+                        .Append("{get; set;}\n")
+                        .ToString();
+
+                    Lines(Attributes);
+                    Line(signature);
+
+                    return base.GetLines;
+                }
             }
+
         }
 
-        //internal class StartTaskMethod : MethodBuilder
-        //{
-        //    public StartTaskMethod(MethodInfo method) : base("StartTask", typeof(TaskResult), TypeAttributes.Public, true)
-        //    {
-        //        WithAttribute("TaskHelp");
-        //
-        //        // build the method body
-        //        foreach (var arg in method.GetParameters())
-        //        {
-        //            classBuilder = classBuilder
-        //                .WithMethod(new MethodBuilder()
-        //                .WithParameter()
-        //                classBuilder. (typeBuilder, arg.Name, arg.ParameterType);
-        //        )
-        //            ;
-        //        }
-        //    }
-
-        //    public override string ToCode()
-        //    {
-        //        return base.ToCode();
-        //    }
-        //}
-
-        internal class FieldInfo
+        public class FieldInfo
         {
             public string Name { get; set; }
             public Type DataType { get; set; }
@@ -569,38 +603,46 @@ namespace Bessett.SmartConsole
                 return this;
             }
 
-            public override string ToCode(int indentLevel = 0)
+            public override IEnumerable<string> GetLines
             {
-                string t =Tab(indentLevel);
-
-                CodeBuilder codeBuilder = new CodeBuilder();
-
-                foreach (var attr in Attributes)
+                get
                 {
-                    codeBuilder.Line(attr.ToCode(indentLevel));
+                    CodeBuilder codeBuilder = new CodeBuilder();
+
+                    // build signature
+                    codeBuilder
+                        .Lines(Attributes)
+                        .Lines(CodeBuilder.MethodSignature("public", Name, DataType, Parameters, IsOverride))
+                        .OpenScope()
+                        .Lines(BodyBlock, 1)
+                        .CloseScope();
+
+                    return codeBuilder.GetLines;
                 }
-
-                // build signature
-                codeBuilder.Line($"{t}public {(IsOverride ? "override " : "")}{DataType.Name} {Name} (");
-
-                //insert parameters
-                codeBuilder.Line(string.Join(",", Parameters.Select(p=>  $"{p.DataType.Name} {p.Name}") ));
-
-                codeBuilder.Line(")");
-
-                // body
-                codeBuilder.Line($"{t}{{");
-
-                //todo - fix codelines
-                codeBuilder.Lines(BodyBlock);
-
-                codeBuilder.Line($"{t}}}");
-
-                return codeBuilder.ToString();
             }
         }
         #endregion
+    }
+    
+    public static class CodeBuilderExtensions
+    {
+        public static TaskBuilder.CodeBuilder Foreach(this TaskBuilder.CodeBuilder bldr, string iterator, string enumeriable, TaskBuilder.CodeBuilder block )
+        {
+            TaskBuilder.CodeBuilder iterationBlock = new TaskBuilder.CodeBuilder()
+                .Line($"foreach( var {iterator} in {enumeriable})")
+                .OpenScope()
+                .Lines(block, 1)
+                .CloseScope();
 
+            bldr.Lines(iterationBlock);
+            return bldr;
+        }
     }
 
+
+    public class CodeAtom
+    {
+        
+    }
 }
+
