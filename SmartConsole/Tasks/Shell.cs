@@ -26,7 +26,7 @@ namespace Bessett.SmartConsole.Tasks
             do
             {
                 Console.Write("SC> ");
-                command = Console.ReadLine().Trim();
+                { command = Console.ReadLine().Trim();}
 
                 if (command.ToLower() == "quit") break;
                 if (command.ToLower() == "q") break;
@@ -39,8 +39,7 @@ namespace Bessett.SmartConsole.Tasks
 
                 if (command.Length > 0)
                 {
-                    var args = ConsoleProgram.BuildCommand(command);
-                    var result = ConsoleProgram.StartTask(args);
+                    var result = ConsoleProgram.StartTask(command);
 
                     if(!string.IsNullOrEmpty(result.Message))
                         Console.WriteLine($"[{result.ResultCode}]:\n{result.Message}\n");

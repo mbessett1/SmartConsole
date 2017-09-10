@@ -16,20 +16,13 @@ namespace Bessett.SmartConsole
     {
         public static TaskResult Start(string[] args, string defaultTask = "shell")
         {
-            return Start(args, typeof(ConsoleTask), defaultTask);
-        }
-
-        public static TaskResult Start(string[] args, Type baseTaskType, string defaultTask = "shell")
-        {
             Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
-
-            TaskLibrary.BuildAvailableTasks(baseTaskType);
 
             string[] validArgs = args.Length > 0 ? args : new string[] { defaultTask };
 
-            var result  = StartTask(validArgs);
+            var result = StartTask(validArgs);
 
-            if (Debugger.IsAttached )
+            if (Debugger.IsAttached)
             {
                 ConsolePrompt("\nPress any key to return to IDE ...");
             }
@@ -37,7 +30,7 @@ namespace Bessett.SmartConsole
             return result;
         }
 
-        internal static string[] BuildCommand(string args)
+        internal static string[] ExpandCommand(string args)
         {
             var result = new List<string>();
 
@@ -97,9 +90,15 @@ namespace Bessett.SmartConsole
                 return StartTask(taskInstance);
             }
 
-            return BadResult(-1, $"ERROR: Could not discover task: [{taskname}]\n");
+            return TaskResult.Failed( $"ERROR: Task Not found [{taskname}]\n");
 
         }
+
+        public static TaskResult StartTask(string command)
+        {
+            return StartTask(ExpandCommand(command));
+        }
+
         internal static TaskResult StartTask(ConsoleTask taskInstance)
         {
             if (taskInstance != null)
@@ -129,20 +128,10 @@ namespace Bessett.SmartConsole
 
                     return result;
                 }
-                return BadResult(-1, "Unable to confirm task to start.");
+                return TaskResult.Failed("Unable to confirm task to start.");
             }
-            return BadResult(0, $"Empty Task\n");
+            return TaskResult.Failed( $"No Task to start\n");
         }
 
-        private static TaskResult BadResult(int resultcode, string message)
-        {
-            return new TaskResult()
-            {
-                 ResultCode = resultcode,
-                 IsSuccessful = false,
-                 Message = message
-            };
-        }
- 
     }
 }

@@ -7,19 +7,7 @@ using System.Threading.Tasks;
 
 namespace SmartConsole.Test.Tasks
 {
-    public class Test1 : ConsoleTask
-    {
-        public override void Complete()
-        {
-            //throw new NotImplementedException();
-        }
-
-        public override void Start()
-        {
-            Console.WriteLine("Test1 executing");
-        }
-    }
-
+    [NoConfirmation]
     [TaskAlias("get-test1")]
     public class AliasTest : ConsoleTask
     {
@@ -28,7 +16,7 @@ namespace SmartConsole.Test.Tasks
             Console.WriteLine($"Alias TEST complete.");
         }
 
-        public override TaskResult StartTask()
+        public override Bessett.SmartConsole.TaskResult StartTask()
         {
             Console.WriteLine($"Alias TEST executing...");
 

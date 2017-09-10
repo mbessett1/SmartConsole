@@ -201,9 +201,9 @@ namespace Bessett.SmartConsole
                 var helpText = GetType().GetTaskHelp();
                 if (helpText != null)
                 {
-                    return ( string.IsNullOrEmpty(helpText.Name)) ? GetType().Name:  helpText.Name ;
+                    return ( string.IsNullOrEmpty(helpText.Name)) ? GetType().TaskAlias():  helpText.Name ;
                 }
-                return GetType().Name;
+                return GetType().TaskAlias();
             }
         }
 

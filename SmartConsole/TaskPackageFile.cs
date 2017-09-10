@@ -19,7 +19,7 @@ namespace Bessett.SmartConsole
             {
                 foreach (var line in File.ReadAllLines(Filename).Where(t => t.Trim().Any()))
                 {
-                    var args = ConsoleProgram.BuildCommand(line);
+                    var args = ConsoleProgram.ExpandCommand(line);
                     AddTask(args.ToConsoleTask());
                 }
             }

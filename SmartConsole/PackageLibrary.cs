@@ -14,7 +14,7 @@ namespace Bessett.SmartConsole
             _packages = TaskLibrary.GetTypes<TaskPackage>().Where(t => t.GetConstructor(Type.EmptyTypes) != null).ToList();
         }
 
-        public static IEnumerable<Type> ListAll()
+        public static IEnumerable<Type> AllPackages()
         {
             foreach (var package in _packages)
             {

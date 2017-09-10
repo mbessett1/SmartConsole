@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartConsole.Test.Tasks
+namespace SmartConsole.Test
 {
     public class TestSystem
     {

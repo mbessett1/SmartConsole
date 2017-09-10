@@ -22,19 +22,6 @@ namespace Bessett.SmartConsole
     }
 
     /// <summary>
-    /// Provide an alternate Command text besides the class name
-    /// </summary>
-    public class TaskAlias : Attribute
-    {
-        public string AliasName { get; set; }
-
-        public TaskAlias(string aliasName)
-        {
-            AliasName = aliasName;
-        }
-    }
-
-    /// <summary>
     /// Specify default value if value not specified on command line
     /// </summary>
     public class RequiredArgument : Attribute { }

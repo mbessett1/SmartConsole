@@ -10,7 +10,7 @@ namespace Bessett.SmartConsole.Tasks
         public override TaskResult StartTask()
         {
             Console.WriteLine($"{indent}Task Packages Available:");
-            foreach (var package in PackageLibrary.ListAll())
+            foreach (var package in PackageLibrary.AllPackages())
             {
                 Console.WriteLine($"{indent}{indent}{package.Name}");
             }

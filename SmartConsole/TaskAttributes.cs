@@ -29,4 +29,18 @@ namespace Bessett.SmartConsole
     /// </summary>
     public class NoConfirmation : Attribute { }
 
+    /// <summary>
+    /// Provide an alternate Command text besides the class name
+    /// </summary>
+    public class TaskAlias : Attribute
+    {
+        public string AliasName { get; set; }
+
+        public TaskAlias(string aliasName)
+        {
+            AliasName = aliasName;
+        }
+    }
+
+
 }
