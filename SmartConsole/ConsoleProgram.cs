@@ -128,7 +128,7 @@ namespace Bessett.SmartConsole
 
                     return result;
                 }
-                return TaskResult.Failed("Unable to confirm task to start.");
+                return TaskResult.Failed("Unable to confirm task to start.", 1);
             }
             return TaskResult.Failed( $"No Task to start\n");
         }

@@ -25,7 +25,7 @@ namespace Bessett.SmartConsole
         }
         public static TaskResult Exception(Exception ex)
         {
-            return new TaskResult() { IsSuccessful = true, Message = ex.Message, ResultCode = ex.HResult };
+            return new TaskResult() { IsSuccessful = false, Message = ex.Message, ResultCode = ex.HResult };
         }
     }
 
@@ -106,6 +106,8 @@ namespace Bessett.SmartConsole
 
             foreach (var property in GetType().GetProperties())
             {
+                var paramIsRequired = false;
+
                 var attributes = property.GetCustomAttributes(true);
 
                 foreach (var attrib in attributes)
@@ -113,12 +115,25 @@ namespace Bessett.SmartConsole
                     if (attrib is ArgumentHelp)
                     {
                         var attr = (ArgumentHelp)attrib;
-                        if (attr.IsRequired)
-                            if (!CommandArguments.ContainsKey(property.Name))
-                            {
-                                Console.WriteLine(attr.ErrorText, property.Name);
-                                isValid = false;
-                            }
+                        paramIsRequired = attr.IsRequired;
+                        if (paramIsRequired && !CommandArguments.ContainsKey(property.Name))
+                        {
+                            Console.WriteLine(
+                                string.IsNullOrEmpty(attr.ErrorText) ? "{0} is required." : attr.ErrorText
+                                , property.Name);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    else if (attrib is RequiredArgument)
+                    {
+                        paramIsRequired = true;
+                        if (!CommandArguments.ContainsKey(property.Name))
+                        {
+                            Console.WriteLine($"{property.Name} is a required.");
+                            isValid = false;
+                            break;
+                        }
                     }
                 }
             }

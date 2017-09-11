@@ -21,7 +21,7 @@ namespace SmartConsole.Test.Packages
                 Compile = true,
                 Description = "Testing result  from BuildTask Task (I know, wierd)",
                 TargetMethod = "ServiceMethod",
-                TargetType = "DisposableTestSystem"
+                TargetType = "SmartConsole.Test.DisposableTestSystem"
             }) ;
         }
     }

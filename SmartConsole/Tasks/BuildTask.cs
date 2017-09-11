@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace Bessett.SmartConsole.Tasks
     [TaskHelp("Creates Dynamic ConsoleTask based on encapsulated method")]
     public class BuildTask : ConsoleTask
     {
-        [ArgumentHelp("Description for Dynamic task"), RequiredArgument]
+        [ArgumentHelp("Description for Dynamic task", IsRequired = true)]
         public string Name { get; set; } = "";
         [ArgumentHelp("Compile Task after building")]
         public bool Compile { get; set; } = false;
@@ -49,8 +50,16 @@ namespace Bessett.SmartConsole.Tasks
                     baseType = typeof(ConsoleTask);
                 }
 
+                // Problem: if the type the user specifies is ina an assembly t 
+                //
+
+                var targetType = Assembly.GetEntryAssembly().GetType(TargetType);
+
+                if (targetType == null)
+                    return TaskResult.Failed($"Target Type '{TargetType}' not found.");
+
                 var tb = new TaskBuilder(Name, baseType)
-                        .EncapsulateMethod(Type.GetType(TargetType), TargetMethod)
+                        .EncapsulateMethod(targetType, TargetMethod)
                     ;
                 
                 if (Description.IsValid())

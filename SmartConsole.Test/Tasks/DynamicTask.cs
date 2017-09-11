@@ -21,7 +21,7 @@ namespace SmartConsole.Test.Tasks
             try
             {
                 var tb = DynamicTasks
-                        .AddConsoleTask<ConsoleTask>("DynamicSample")
+                    .AddConsoleTask<ConsoleTask>("DynamicSample")
                         .AddTaskHelp("Sample Dynamic Task")
                         .HasAlias("ds")
                         .HasNoConfirmation()

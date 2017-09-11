@@ -17,7 +17,7 @@ namespace Bessett.SmartConsole
         static TaskLibrary()
         {
             AllTasks = new List<Type>();
-
+            
             // add default assemblies
             RegisterAssembly(Assembly.GetCallingAssembly());
             RegisterAssembly(Assembly.GetEntryAssembly());

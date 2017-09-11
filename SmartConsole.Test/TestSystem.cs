@@ -8,7 +8,7 @@ namespace SmartConsole.Test
 {
     public class TestSystem
     {
-        public int ServiceMethod(string text = "", int length = 0, long longLength = 100)
+        public int ServiceMethod(string text, int length = 0, long longLength = 100)
         {
             Console.WriteLine($"TestSystem: ServiceMethod: text = {text}");
             Console.WriteLine($"TestSystem: ServiceMethod: length = {length}");
@@ -21,7 +21,7 @@ namespace SmartConsole.Test
     {
         public void Dispose() { }
 
-        public int ServiceMethod(string text = "", int length = 0, long longLength = 100)
+        public int ServiceMethod(string text, int length = 0, long longLength = 100)
         {
             Console.WriteLine($"TestSystem: ServiceMethod: text = {text}");
             Console.WriteLine($"TestSystem: ServiceMethod: length = {length}");

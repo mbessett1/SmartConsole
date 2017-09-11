@@ -17,6 +17,7 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
 
 
     #region Internal Class building support (refactor later)
+
     internal interface ICodeBuilder
     {
         IEnumerable<string> GetLines { get; }
@@ -40,11 +41,13 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             CodeLines.Add($"{Tab(indent)}{codeLine}");
             return this;
         }
+
         public CodeBuilder OpenScope()
         {
             CodeLines.Add("{");
             return this;
         }
+
         public CodeBuilder CloseScope()
         {
             CodeLines.Add("}");
@@ -56,6 +59,7 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             CodeLines.Add("");
             return this;
         }
+
         public CodeBuilder Lines(IEnumerable<ICodeBuilder> codeLines, int indent = 0)
         {
             foreach (ICodeBuilder codeBuilder in codeLines)
@@ -93,7 +97,8 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             return result;
         }
 
-        public static CodeBuilder UseDisposePattern(string disposableVar, Type disposableType, string newDeclaration, CodeBuilder codeText)
+        public static CodeBuilder UseDisposePattern(string disposableVar, Type disposableType, string newDeclaration,
+            CodeBuilder codeText)
         {
             var builder = new CodeBuilder();
 
@@ -107,7 +112,8 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             return builder;
         }
 
-        public static CodeBuilder MethodSignature(string scope, string name, Type dataType, List<FieldInfo> parameters, bool IsOverride = false)
+        public static CodeBuilder MethodSignature(string scope, string name, Type dataType, List<FieldInfo> parameters,
+            bool IsOverride = false)
         {
             var builder = new CodeBuilder();
             var signature = new StringBuilder()
@@ -120,7 +126,9 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             return builder;
 
         }
-        public static CodeBuilder UseTryCatchPattern(CodeBuilder tryBlock, CodeBuilder catchBlock, string exceptionVar = "ex")
+
+        public static CodeBuilder UseTryCatchPattern(CodeBuilder tryBlock, CodeBuilder catchBlock,
+            string exceptionVar = "ex")
         {
             var builder = new CodeBuilder();
 
@@ -190,16 +198,19 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             Methods.Add(method);
             return this;
         }
+
         public ClassBuilder WithProperty(PropertyBuilder property)
         {
             Properties.Add(property);
             return this;
         }
+
         public ClassBuilder WithUsing(string usingDeclaration)
         {
             Usings.Line($"using {usingDeclaration};");
             return this;
         }
+
         public ClassBuilder WithAttribute(string name, params object[] attrParams)
         {
             Attributes.Add(new AttributeBuilder(name, attrParams));
@@ -214,15 +225,15 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
 
                 Lines(Usings);
                 Lines(CodeBuilder.Namespace(
-                        NamespaceDeclaration,
-                        new CodeBuilder()
-                            .Lines(Attributes)
-                            .Line($"public class {Name} : {BaseClass}")
-                            .OpenScope()
-                            .Lines(Properties, 1)
-                            .Lines(Methods, 1)
-                            .CloseScope()
-                    ));
+                    NamespaceDeclaration,
+                    new CodeBuilder()
+                        .Lines(Attributes)
+                        .Line($"public class {Name} : {BaseClass}")
+                        .OpenScope()
+                        .Lines(Properties, 1)
+                        .Lines(Methods, 1)
+                        .CloseScope()
+                ));
 
                 return CodeLines.AsEnumerable();
             }
@@ -256,6 +267,10 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
                     {
                         attrParams.Add($"\"{attrParam}\"");
                     }
+                    else if (attrParam.GetType() == typeof(bool))
+                    {
+                        attrParams.Add($"{attrParam.ToString().ToLower()}");
+                    }
                     else
                     {
                         attrParams.Add($"{attrParam}");
@@ -274,8 +289,12 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
     {
         private List<AttributeBuilder> Attributes { get; set; } = new List<AttributeBuilder>();
         public string Scope { get; private set; } = "public";
-        public string Name { get; private set; }
+        public string Name { get; private set; } 
         public Type DataType { get; private set; }
+        public object DefaultValue { get; private set; }
+
+        private bool HasDefault{ get { return DefaultValue != null; }}
+        
 
         public PropertyBuilder(string name, Type dataType, string scope = "public")
         {
@@ -301,13 +320,26 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
             return this;
         }
 
+        internal PropertyBuilder WithDefaultValue(object defaultValue)
+        {
+            DefaultValue = defaultValue;
+            return this;
+        }
+
         public override IEnumerable<string> GetLines
         {
             get
             {
+                var defaultSpec = HasDefault
+                    ? DefaultValue is string 
+                        ? $" = \"{DefaultValue}\";"
+                        : $" = {DefaultValue};"
+                    : "";
+
                 var signature = new StringBuilder()
                     .Append($"{Scope} {DataType.Name} {Name} ")
                     .Append("{get; set;}")
+                    .Append( defaultSpec )
                     .ToString();
 
                 return new CodeBuilder()
@@ -315,6 +347,7 @@ namespace Bessett.SmartConsole.CodeBuilderPOC
                     .Line(signature)
                     .BlankLine()
                     .GetLines;
+
             }
         }
 

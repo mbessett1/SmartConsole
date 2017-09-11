@@ -75,8 +75,8 @@ namespace SmartConsole.Test.Tasks
                             "Console.WriteLine(\"Please confirm!\");",
                             "return base.ConfirmStart();  "
                         })
-                        .AddProperty("Name", typeof(string), "Name of person", true)
-                        .AddProperty("Age", typeof(int), "Age of person", false)
+                        .AddProperty("Name", typeof(string), "Name of person" , null, true)
+                        .AddProperty("Age", typeof(int), "Age of person" )
                     ;
                 return CompileTask(tb);
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Bessett.SmartConsole.Tasks
 {
@@ -49,6 +50,10 @@ namespace Bessett.SmartConsole.Tasks
         {
             TaskResult result = new TaskResult();
 
+            Console.WriteLine($"Executing Package {Name}");
+
+            var Results = new List<TaskResult>();
+
             try
             {
                 foreach (var task in package.GetTasks())
@@ -57,13 +62,19 @@ namespace Bessett.SmartConsole.Tasks
                     if (task.ConfirmStart())
                     {
                         result = task.StartTask();
+
+                        Results.Add(result);  //$"{task.GetType().Name}  {result.Message}"
                         if (!result.IsSuccessful)
                         {
+                            Console.WriteLine(result.Message);
                             break;
                         }
                     }
+                    else
+                    {
+                        throw new Exception($"{task.GetType().Name} was not valid to start.");
+                    }
                 }
-
             }
             catch (Exception ex)
             {

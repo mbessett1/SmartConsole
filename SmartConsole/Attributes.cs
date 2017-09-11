@@ -63,7 +63,7 @@ namespace Bessett.SmartConsole
             : this(helpText, false, defaultErrorText)
         { }
 
-        internal ArgumentHelp(string helpText, bool isRequired, string errorText)
+        public ArgumentHelp(string helpText, bool isRequired, string errorText)
         {
             this.HelpText = helpText;
             this.ErrorText = errorText;

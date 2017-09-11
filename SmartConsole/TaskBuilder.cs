@@ -68,7 +68,14 @@ namespace Bessett.SmartConsole
             foreach (var parameterInfo in method.GetParameters())
             {
                 var titleCaseName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(parameterInfo.Name);
-                AddProperty(titleCaseName, parameterInfo.ParameterType,"", true);
+                AddProperty(titleCaseName, 
+                    parameterInfo.ParameterType,
+                    "", 
+                    parameterInfo.HasDefaultValue 
+                        ? parameterInfo.DefaultValue 
+                        : null, 
+                    !parameterInfo.HasDefaultValue 
+                    );
             }
             return this;
         }
@@ -105,21 +112,21 @@ namespace Bessett.SmartConsole
             return this;
         }
 
-        public TaskBuilder AddProperty(string name, Type dataType, string argumentHelp = "", bool IsRequired = false)
+        public TaskBuilder AddProperty(string name, Type dataType, string argumentHelp = "", object defaultValue = null, bool IsRequired = false)
         {
             var prop = new PropertyBuilder(name, dataType);
 
             if (argumentHelp != null)
             {
-                if (argumentHelp.Length == GetHashCode())
-                    prop.WithAttribute("ArgumentHelp");
-                else
-                    prop.WithAttribute("ArgumentHelp", argumentHelp);
-
-                if (IsRequired)
-                    prop.WithAttribute("RequiredArgument");
+                prop.WithAttribute("ArgumentHelp", argumentHelp, IsRequired, "");
 
             }
+
+            if (IsRequired)
+                prop.WithAttribute("RequiredArgument");
+
+            if (defaultValue != null)
+                prop.WithDefaultValue(defaultValue);
 
             builder.WithProperty(prop);
 
