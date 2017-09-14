@@ -20,28 +20,9 @@ namespace SmartConsole.Test
         static void Main(string[] args)
         {
             // prebuild some Dynamic ConsoleTasks
-            PrebuildTasks();
             ConsoleProgram.Start(args);
         }
 
-        static void PrebuildTasks()
-        {
-            var tb = new TaskBuilder("TestSystemServiceMethod", typeof(ConsoleTask))
-                    .EncapsulateMethod(typeof(TestSystem), "ServiceMethod")
-                    .HasAlias("test-TestSystem-ServiceMethod")
-                    .AddTaskHelp("Prebuilt Task that Calls TestSystem.ServiceMethod()")
-                    .HasNoConfirmation()
-                ;
-
-            DynamicTasks.AddConsoleTask(tb);
-            var failures = DynamicTasks.CreateDynamic();
-
-            if (failures.Any())
-            {
-                Console.WriteLine(tb.ToView());
-                Console.WriteLine(failures.Expand());
-            }
-        }
     }
 }
 

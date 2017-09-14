@@ -13,26 +13,28 @@ namespace SmartConsole.Test.Packages
     {
         public TestPackage()
         {
-            AddTask(new PackageTestCaseA() );
-            AddTask(new BuildTask()
-            {
-                Name = "WierdTest",
-                Alias = "test-WierdTest",
-                Compile = true,
-                Description = "Testing result  from BuildTask Task (I know, wierd)",
-                TargetMethod = "ServiceMethod",
-                TargetType = "SmartConsole.Test.DisposableTestSystem"
-            }) ;
+            AddTask(new PackageTestCaseA());
+            AddTask(new PackageTestCaseB());
         }
     }
 
     [TaskAlias("test-packageTask1")]
-    [TaskHelp("ConsoleTask artifact for package test")]
+    [TaskHelp("ConsoleTask artifact for package test (A)")]
     public class PackageTestCaseA : ConsoleTask
     {
         public override TaskResult StartTask()
         {
             Console.WriteLine($"Running PackageTestCaseA");
+            return TaskResult.Complete("Packaged Task Successful");
+        }
+    }
+    [TaskAlias("test-packageTask2")]
+    [TaskHelp("ConsoleTask artifact for package test (B)")]
+    public class PackageTestCaseB : ConsoleTask
+    {
+        public override TaskResult StartTask()
+        {
+            Console.WriteLine($"Running PackageTestCaseB");
             return TaskResult.Complete("Packaged Task Successful");
         }
     }

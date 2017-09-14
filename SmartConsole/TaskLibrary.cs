@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Bessett.SmartConsole
 {
-    internal static class TaskLibrary
+    public static class TaskLibrary
     {
         internal static List<Assembly> AssemblyRegistry = new List<Assembly>();
-        public static List<Type> AllTasks { get; set; }
+        public static List<Type> AllTasks { get; private set; }
 
         public static string BaseTaskTypeName { get; private set; }
 

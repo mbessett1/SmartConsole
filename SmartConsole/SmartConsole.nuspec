@@ -11,8 +11,8 @@
     <!-- iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl -->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Added support for ConsoleTask descendents</releaseNotes>
-    <copyright>Copyright 2015, 2016</copyright>
+    <releaseNotes>Support Task Packages, Dynamic Tasks</releaseNotes>
+    <copyright>Copyright 2015, 2016, 2017</copyright>
     <tags></tags>
   </metadata>
 </package>
