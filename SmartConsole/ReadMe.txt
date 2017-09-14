@@ -61,6 +61,13 @@ Additional Information:
 2. Added TaskPackage support that allows tasks to be composed and executed as a package/group
 3. Added support to load task package/script from a file
   
+2.0 Release
 
+1. Added support for subclassing Console Task
+2. Added support for Task Packaging
+3. Added support for Task aliases
+4. Improved help
+5. Added return upjects and new overload StartTask
+6. Added supportability for SmartConsole.SmartTasks (Dynamic Tasks)
 
 	
