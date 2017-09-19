@@ -53,7 +53,7 @@ namespace Bessett.SmartConsole
         /// <summary>
         /// Access to Command arguments
         /// </summary>
-        public Dictionary<string, string> CommandArguments { get; private set; }
+        public Dictionary<string, string> CommandArguments { get; private set; } 
 
         // override when special argument handling required
         public virtual string[] Arguments
@@ -104,6 +104,10 @@ namespace Bessett.SmartConsole
         {
             var isValid = true;
 
+            // check if the task was not created via command.
+            //if not, arguments validity check presumed irrelavent/
+            if (CommandArguments == null) return true;
+
             foreach (var property in GetType().GetProperties())
             {
                 var paramIsRequired = false;
@@ -130,7 +134,7 @@ namespace Bessett.SmartConsole
                         paramIsRequired = true;
                         if (!CommandArguments.ContainsKey(property.Name))
                         {
-                            Console.WriteLine($"{property.Name} is a required.");
+                            Console.WriteLine($" ** {property.Name} is a required parameter\n.");
                             isValid = false;
                             break;
                         }

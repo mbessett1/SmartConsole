@@ -30,9 +30,11 @@ namespace Bessett.SmartConsole.Tasks
                     package = PackageLibrary.GetPackage(Name);
                     if (package == null)
                     {
-                        Console.WriteLine($"Package [{Name}] not found. GetPackages to view available packages.");
-                        // run GetPackages for the user
+                        Console.WriteLine($"Package [{Name}] not found.\n\nSC> GetPackages\n");
 
+                        // run GetPackages for the user
+                        ConsoleProgram.StartTask("GetPackages");
+                        Console.WriteLine($"\n\n");
 
                         return false;
                     }
@@ -64,9 +66,12 @@ namespace Bessett.SmartConsole.Tasks
                         result = task.StartTask();
 
                         Results.Add(result);  //$"{task.GetType().Name}  {result.Message}"
+
+                        if (!string.IsNullOrEmpty(result.Message))
+                            Console.WriteLine(result.Message);
+
                         if (!result.IsSuccessful)
                         {
-                            Console.WriteLine(result.Message);
                             break;
                         }
                     }

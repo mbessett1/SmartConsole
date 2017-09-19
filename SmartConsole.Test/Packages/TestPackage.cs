@@ -22,6 +22,9 @@ namespace SmartConsole.Test.Packages
     [TaskHelp("ConsoleTask artifact for package test (A)")]
     public class PackageTestCaseA : ConsoleTask
     {
+        [RequiredArgument]
+        public string Filename { get; set; }
+
         public override TaskResult StartTask()
         {
             Console.WriteLine($"Running PackageTestCaseA");
