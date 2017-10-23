@@ -145,6 +145,7 @@
     <Compile Include="Tasks\Help.cs" />
     <Compile Include="Tasks\RunPackage.cs" />
     <Compile Include="Tasks\Shell.cs" />
+    <Compile Include="TextTable.cs" />
     <Compile Include="TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

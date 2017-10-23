@@ -185,6 +185,7 @@
     <Compile Include="Tasks\AliasTest.cs" />
     <Compile Include="Tasks\testDynamic.cs" />
     <Compile Include="Tasks\TestContainer.cs" />
+    <Compile Include="Tasks\TestTextTable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
