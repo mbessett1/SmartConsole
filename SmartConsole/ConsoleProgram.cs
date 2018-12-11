@@ -16,7 +16,8 @@ namespace Bessett.SmartConsole
     {
         public static TaskResult Start(string[] args, string defaultTask = "shell")
         {
-            Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
+            // Note supported in Net Standard 2.0
+            //Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
 
             string[] validArgs = args.Length > 0 ? args : new string[] { defaultTask };
 

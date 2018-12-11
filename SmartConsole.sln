@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole", "SmartConsole\SmartConsole.csproj", "{1C530DD8-B552-4EDE-BC72-E09C4D25F163}"
 EndProject
@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{BC5AA4
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole.Test", "SmartConsole.Test\SmartConsole.Test.csproj", "{FAF70BFE-9C66-41AC-8058-A5435BA69AC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole.TestDNC", "SmartConsole.TestDNC\SmartConsole.TestDNC.csproj", "{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,8 +30,15 @@ Global
 		{FAF70BFE-9C66-41AC-8058-A5435BA69AC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAF70BFE-9C66-41AC-8058-A5435BA69AC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAF70BFE-9C66-41AC-8058-A5435BA69AC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DDE45FEA-6F7B-4970-BEE8-A5A370FD1E96}
 	EndGlobalSection
 EndGlobal
