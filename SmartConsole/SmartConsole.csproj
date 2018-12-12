@@ -11,6 +11,11 @@
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReleaseNotes>Targeting .Net Standard</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/mbessett1/SmartConsole.git</PackageProjectUrl>
+    <Copyright>Copyright 2015, 2016, 2017, 2018</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <RepositoryUrl>https://github.com/mbessett1/SmartConsole</RepositoryUrl>
+    <PackageId>Bessett.SmartConsole</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
