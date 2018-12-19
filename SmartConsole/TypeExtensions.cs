@@ -60,7 +60,6 @@ namespace Bessett.SmartConsole
 
             foreach (var property in task.GetProperties().Where(p => p.GetCustomAttributes(true).Any(a => a is ArgumentHelp)))
             {
-
                 var attribute = property.GetCustomAttributes(true).FirstOrDefault(a => a is ArgumentHelp);
                 var argument = (ArgumentHelp)attribute;
 

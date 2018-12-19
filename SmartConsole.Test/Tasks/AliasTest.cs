@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace SmartConsole.Test.Tasks
 {
     [NoConfirmation]
-    [TaskAlias("get-test1")]
+    [TaskAlias("qtest1")]
+    [TaskHelp("NoArguments")]
     public class AliasTest : ConsoleTask
     {
         public override void Complete()
@@ -16,10 +17,35 @@ namespace SmartConsole.Test.Tasks
             Console.WriteLine($"Alias TEST complete.");
         }
 
-        public override Bessett.SmartConsole.TaskResult StartTask()
+        public override TaskResult StartTask()
         {
             Console.WriteLine($"Alias TEST executing...");
+            WriteArguments();
+            return TaskResult.Complete();
+        }
+    }
 
+    [NoConfirmation]
+    [TaskAlias("qtest2")]
+    [TaskHelp("Arguments present")]
+    public class AliasTest2 : ConsoleTask
+    {
+        [ArgumentHelp]
+        public string Name { get; set; }
+        [ArgumentHelp]
+        public string LongDescription { get; set; }
+        [ArgumentHelp]
+        public string Instance { get; set; }
+
+        public override void Complete()
+        {
+            Console.WriteLine($"{GetType().Name} complete.");
+        }
+
+        public override TaskResult StartTask()
+        {
+            Console.WriteLine($"Alias TEST executing...");
+            WriteArguments();
             return TaskResult.Complete();
         }
     }

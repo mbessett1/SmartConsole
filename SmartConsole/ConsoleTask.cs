@@ -200,14 +200,21 @@ namespace Bessett.SmartConsole
         }
 
         /// <summary>
-        /// Echo all arguments
+        /// Echo all arguments (that have ArgumentHelp attribute)
         /// </summary>
         protected void WriteArguments()
         {
-            Console.WriteLine();
-            foreach (var arg in GetType().GetTaskArguments().Where(a=> a.PropertyInfo.Name != "Silent"))
+            var taskArguments = GetType().GetTaskArguments().ToList();
+            if (taskArguments.Any())
             {
-                Console.WriteLine("  {0} = {1} ", arg.PropertyInfo.Name, arg.PropertyInfo.GetValue(this));
+                var maxFieldNameSize = taskArguments.Max(a => a.PropertyInfo.Name.Length);
+
+                Console.WriteLine("Arguments:");
+                foreach (var arg in taskArguments.Where(a => a.PropertyInfo.Name != "Silent"))
+                {
+                    Console.WriteLine($"  {arg.PropertyInfo.Name.PadRight(maxFieldNameSize)} = {arg.PropertyInfo.GetValue(this)} ");
+                }
+                Console.WriteLine();
             }
         }
 
