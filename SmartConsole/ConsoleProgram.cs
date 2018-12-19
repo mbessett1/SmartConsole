@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bessett.SmartConsole.Tasks;
 using Bessett.SmartConsole;
+using Bessett.SmartConsole.TimeExtensions;
 
 namespace Bessett.SmartConsole
 {
@@ -110,22 +111,8 @@ namespace Bessett.SmartConsole
                     clock.Start();
                     var result = taskInstance.StartTask();
                     taskInstance.Complete();
-                    if (clock.Elapsed.Hours > 1)
-                    {
-                        Console.WriteLine($"Completed in {clock.Elapsed}");
-                    }
-                    else if(clock.Elapsed.TotalSeconds > 60)
-                    {
-                        Console.WriteLine($"Completed in {clock.Elapsed.TotalMinutes:f3} minutes");
-                    }
-                    else if (clock.Elapsed.TotalSeconds > 60)
-                    {
-                        Console.WriteLine($"Completed in {clock.Elapsed.TotalSeconds:f3} seconds");
-                    }
-                    else 
-                    {
-                        Console.WriteLine($"Completed in {clock.Elapsed.TotalMilliseconds:f3} msec");
-                    }
+
+                    Console.WriteLine($"Completed in {clock.Elapsed.ToText()}");
 
                     return result;
                 }
