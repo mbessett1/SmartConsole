@@ -1,20 +1,22 @@
 # SmartConsole
-SmartConsole README
 
 Smart console is a quick way to build self-describing console apps.  This library lets a developer quickly build console apps that will have attribute driven help and tasks.
 
 Quick Code Example:
-
+```C#
     class Program
     {
         static void Main(string[] args)
         {
-            ConsoleProgram.Start(args);  // Only line required to start
+            // start the console
+            // if there is no argument, the console
+            // will start a shell
+            ConsoleProgram.Start(args);  
         }
     }
 
 	// supporting a discoverable task
-	[TaskHelp]
+	[TaskHelp("Some Help for the Task")]
     public class DoSomething: ConsoleTask   
     {
         [ArgumentHelp( IsRequired = true, HelpText = "This will do something." ,ErrorText = "Invalid value" )]
@@ -38,21 +40,24 @@ Quick Code Example:
         }
 
     }
+```
+## Example usage/execution on command line:
+### Run a one-time command
 
-Example usage/execution on command line:
-
-C:\>MyApp DoSomething -RequiredValue MyValue -BatchSize 20
+`C:\>MyApp DoSomething -RequiredValue MyValue -BatchSize 20`
   Executes (or tries to execute) the task. Argument validation (checking required) happens first, as well
   as confirming execution if applicable.
-  
-C:\>MyApp  {No arguments will show help}
-  Shows help fro all tasks available (those derived from Consoletask)
+
+### Start a command shell  
+`C:\>MyApp`  
+
+No arguments will start command shell
   
 C:\>myApp help DoSomething
   Shows help associated with DoSomething
 
 
-Additional Information:
+### Additional Information:
   When the app runs, it will pause to confirm execution UNLESS the task class has a [NoConfirmation] attribute, 
   or the commandline specified "-Silent".
 
