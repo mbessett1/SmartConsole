@@ -133,12 +133,13 @@ namespace Bessett.SmartConsole
                 catch (Exception ex)
                 {
                     Console.WriteLine("Cannot evaluate parameters:\n{0}", ex.Message);
-                    return GetTaskInstance<T>("help" ,new string[]{"help", taskName} );
+                    return null; // GetTaskInstance<T>("help" ,new string[]{"help", taskName} );
                 }
 
                 return taskInstance;
             }
 
+            Console.WriteLine($"Task Not found [{taskName}]\n");
             return null;
 
         }

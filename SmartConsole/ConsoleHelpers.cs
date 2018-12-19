@@ -80,6 +80,11 @@ using System.Threading.Tasks;
                  {
                      InjectPropertyValue<T>(destination, nameValuePairs[key], p);
                  }
+                else if (key!="arg1")
+                {
+                    // parameter specified that isn't a target task property
+                    throw new ApplicationException($"'{key}' is not a valid argument");
+                }
              }
              return destination;
          }

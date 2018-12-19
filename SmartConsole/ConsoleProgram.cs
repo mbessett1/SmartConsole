@@ -17,7 +17,7 @@ namespace Bessett.SmartConsole
     {
         public static TaskResult Start(string[] args, string defaultTask = "shell")
         {
-            // Note supported in Net Standard 2.0
+            // Not supported in Net Standard 2.0
             //Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
 
             string[] validArgs = args.Length > 0 ? args : new string[] { defaultTask };
@@ -92,7 +92,7 @@ namespace Bessett.SmartConsole
                 return StartTask(taskInstance);
             }
 
-            return TaskResult.Failed( $"ERROR: Task Not found [{taskname}]\n");
+            return TaskResult.Failed( $"ERROR: Could not start [{taskname}]\n");
 
         }
 
