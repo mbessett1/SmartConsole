@@ -1,14 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Security.Principal;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Bessett.SmartConsole.Tasks;
-using Bessett.SmartConsole;
 using Bessett.SmartConsole.TimeExtensions;
 
 namespace Bessett.SmartConsole
@@ -17,9 +9,6 @@ namespace Bessett.SmartConsole
     {
         public static TaskResult Start(string[] args, string defaultTask = "shell")
         {
-            // Not supported in Net Standard 2.0
-            //Thread.CurrentPrincipal = new GenericPrincipal(WindowsIdentity.GetCurrent(), null);
-
             string[] validArgs = args.Length > 0 ? args : new string[] { defaultTask };
 
             var result = StartTask(validArgs);
@@ -36,9 +25,8 @@ namespace Bessett.SmartConsole
         {
             var result = new List<string>();
 
-            int ctr = 0;
-            string temp = "";
-            bool escaped = false;
+            var temp = "";
+            var escaped = false;
 
             for (int i = 0; i < args.Length; i++)
             {

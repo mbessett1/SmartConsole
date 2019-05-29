@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net45</TargetFrameworks>
-    <Version>3.1.0</Version>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <Version>3.2.0</Version>
     <Authors>M. Bessett</Authors>
     <Company>SmartCodeFx</Company>
     <Product>SmartConsole</Product>
     <Description>.Net Standard target for Smart Console</Description>
     <RootNamespace>Bessett.SmartConsole</RootNamespace>
-    <AssemblyVersion>3.1.0.0</AssemblyVersion>
+    <AssemblyVersion>3.2.0.0</AssemblyVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReleaseNotes>Improved library targeting for multiple Frameworks, minimually Net Standard 2.0</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/mbessett1/SmartConsole.git</PackageProjectUrl>
@@ -16,7 +16,7 @@
     <RepositoryType>Git</RepositoryType>
     <RepositoryUrl>https://github.com/mbessett1/SmartConsole</RepositoryUrl>
     <PackageId>Bessett.SmartConsole</PackageId>
-    <FileVersion>3.1.0.0</FileVersion>
+    <FileVersion>3.2.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
