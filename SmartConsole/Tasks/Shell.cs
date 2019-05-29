@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -39,10 +38,17 @@ namespace Bessett.SmartConsole.Tasks
 
                 if (command.Length > 0)
                 {
-                    var result = ConsoleProgram.StartTask(command);
+                    try
+                    {
+                        var result = ConsoleProgram.StartTask(command);
 
-                    if(!string.IsNullOrEmpty(result.Message))
-                        Console.WriteLine($"[{result.ResultCode}]:\n{result.Message}\n");
+                        if (!string.IsNullOrEmpty(result.Message))
+                            Console.WriteLine($"[{result.ResultCode}]:\n{result.Message}\n");
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"An exception ocurred: {ex.Message}");
+                    }
                 }
 
             } while (true);
