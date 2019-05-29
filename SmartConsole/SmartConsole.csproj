@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net45</TargetFrameworks>
     <Version>3.1.0</Version>
     <Authors>M. Bessett</Authors>
     <Company>SmartCodeFx</Company>
@@ -10,11 +10,9 @@
     <RootNamespace>Bessett.SmartConsole</RootNamespace>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Improved Arguments Echoing
-Supress Task Start if unknown arguments specified
-Improved Verbose timespan text</PackageReleaseNotes>
+    <PackageReleaseNotes>Improved library targeting for multiple Frameworks, minimually Net Standard 2.0</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/mbessett1/SmartConsole.git</PackageProjectUrl>
-    <Copyright>Copyright 2015, 2016, 2017, 2018</Copyright>
+    <Copyright>Copyright 2015, 2016, 2017, 2018, 2019</Copyright>
     <RepositoryType>Git</RepositoryType>
     <RepositoryUrl>https://github.com/mbessett1/SmartConsole</RepositoryUrl>
     <PackageId>Bessett.SmartConsole</PackageId>
