@@ -7,8 +7,23 @@ namespace SmartConsole.TestDNC
     {
         static void Main(string[] args)
         {
-            // prebuild some Dynamic ConsoleTasks
-            ConsoleProgram.Start(args);
+
+            var options = new SmartConsoleOptions()
+            {
+                Splash = () =>
+                {
+                    Console.WriteLine("SmartConsole Service Test");
+                    Console.WriteLine("Type 'help' for a list of commands.");
+                    Console.WriteLine($"{Environment.UserDomainName}");
+                },
+                Prompt = () => $"{Environment.UserName}> "
+            };
+
+            var taskResult = ConsoleProgram.StartShell(options);
+            Console.WriteLine(taskResult.Message);                        
         }
     }
+
+    //static DoMethod
+
 }

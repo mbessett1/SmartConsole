@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "SmartConsole.Test.Net7": {
+      "commandName": "Project",
+      "commandLineArgs": "help -one --two",
+      "nativeDebugging": true
+    }
+  }
+}

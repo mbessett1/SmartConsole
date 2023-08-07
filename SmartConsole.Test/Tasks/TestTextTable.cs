@@ -11,7 +11,7 @@ namespace SmartConsole.Test.Tasks
     [TaskAlias("tt")]
     public class TestTextTable: ConsoleTask
     {
-        class Bag
+        class Bag 
         {
             public string Name { get; set; }
             public int Length { get; set; }
@@ -35,9 +35,10 @@ namespace SmartConsole.Test.Tasks
 
             var data2 = new List<Bag>()
             {
-                new Bag() { Name="X-Wing", Length = 105, Decription = "Cool Starfighter"},
-                new Bag() { Name="TIE Fighter",Length = 162, Decription = "Freaky fast and meneuverable fighter"},
-                new Bag() { Name="Millenium Falcon",Length = 783,Decription = "THe ship that made the Kessel Run in less than 12 parsecs"},
+                new Bag() { Name= "X-Wing", Length = 105, Decription = "Cool Starfighter"},
+                new Bag() { Name= "TIE Fighter", Length = 162, Decription = "Freaky fast and meneuverable fighter"},
+                new Bag() { Name= "Millenium Falcon",Length = 783,Decription = "THe ship that made the Kessel Run in less than 12 parsecs"},
+                new Bag() { Name= null, Length = 783, Decription = "NULL Test case"}
 
             };
 
@@ -48,9 +49,9 @@ namespace SmartConsole.Test.Tasks
                 ;
 
             var table2 = new TextTable()
-                    .AddColumn("Col1", 12)
-                    .AddColumn("col2", 4, AlignmentType.Center)
-                    .AddColumn("col3", 12, AlignmentType.Right)
+                    .AddColumn("BADNAME", "sdf324g")
+                    .AddColumn("col-2", 14, AlignmentType.Center)
+                    .AddColumn("32-char column", 32, AlignmentType.Right)                    
                 ;
 
             Console.WriteLine(table.Render(data));
@@ -58,6 +59,9 @@ namespace SmartConsole.Test.Tasks
             Console.WriteLine(new TextTable().Render(data2));
             Console.WriteLine(new TextTable().Render(data2.Select(o => new { Vehicle = o.Name, LOA = o.Length, CatchPhrase = o.Decription })));
             Console.WriteLine(new TextTable().Render(data2.Select(o => new { Vehicle = o.Name, Catch_Phrase = o.Decription })));
+
+            Console.WriteLine(data.RenderAsTextTable(15, data[0]));
+            Console.WriteLine(data2.RenderAsTextTable());
 
             return TaskResult.Complete();
         }

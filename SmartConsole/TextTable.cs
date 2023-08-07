@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Bessett.SmartConsole.Text
@@ -35,7 +37,7 @@ namespace Bessett.SmartConsole.Text
         }
         public TextTable AddColumn(string headerName, string propertyName = null)
         {
-            return AddColumn(new TextColumn() {Header = headerName, Width = headerName.Length });
+            return AddColumn(new TextColumn() {Header = headerName, PropertyName=propertyName, Width = headerName.Length });
         }
 
         public TextTable AddColumn(string headerName, AlignmentType alignment = AlignmentType.Left, string propertyName = null)
@@ -49,10 +51,15 @@ namespace Bessett.SmartConsole.Text
           
         }
 
-        public string Render(IEnumerable<string[]> rows, bool includeHeaders = true)
+        public string Render(IEnumerable<string[]> rows, bool includeHeaders = true, int maxColumnWidth = 15, params string[] headers)
         {
             var sb = new StringBuilder();
 
+            if (_columns.Count == 0 || headers.Length > 0)
+            {
+                GenColumns(rows, maxColumnWidth, headers);
+            }  
+            
             foreach (var row in RenderRows(rows, includeHeaders))
             {
                 sb.AppendLine(row);
@@ -89,8 +96,12 @@ namespace Bessett.SmartConsole.Text
 
             foreach (var obj in target)
             {
-                var l = ((string) Convert.ChangeType(info.GetValue(obj), typeof(string))).Length;
-                result = (l > result) ? l : result;
+                if (info.GetValue(obj) != null)
+                {
+                    //var l = ((string)Convert.ChangeType(info.GetValue(obj), typeof(string))).Length;
+                    var l= info.GetValue(obj).ToString().Length;
+                    result = (l > result) ? l : result;
+                }
             }
             return result + 1;
         }
@@ -122,7 +133,7 @@ namespace Bessett.SmartConsole.Text
                 }
 
                 // get the values for the object
-                var values = rowTypeProperties.Select(p => p.GetValue(row).ToString()).ToArray();
+                var values = rowTypeProperties.Select(p => p.GetValue(row)?.ToString()).ToArray();
 
                 yield return RowText(values);
             }
@@ -137,17 +148,20 @@ namespace Bessett.SmartConsole.Text
                 result.AppendLine(FieldMarkers());
 
             return result.ToString();
-
         }
 
         public string RowText(params string[] values)
         {
             var sb = new StringBuilder();
 
-            int maxCol = (values.Length >= _columns.Count) ? _columns.Count : values.Length;
+            int maxCol = (_columns.Count>0 && values.Length >= _columns.Count) ? _columns.Count : values.Length;
 
             for (int i = 0; i < maxCol; i++)
             {
+                if (i > _columns.Count - 1)
+                {
+                    AddColumn("Column " + i, values[i].Length);
+                }
                 sb.Append(TextField(values[i], _columns[i].Width, _columns[i].Alignment));
             }
 
@@ -166,7 +180,7 @@ namespace Bessett.SmartConsole.Text
         {
             var result = new StringBuilder();
 
-            if (value.Length > size)
+            if (value?.Length > size)
                 value = value.Substring(0, size);
 
             switch (alignment)
@@ -180,8 +194,78 @@ namespace Bessett.SmartConsole.Text
                 case AlignmentType.Right:
                     return result.Append(' ', size).Append(value).ToString().Substring(value.Length, size) + delimiter;
                 default:
-                    return result.Append(value).Append(' ', size).ToString().Substring(0, size) + delimiter;
+                    return result.Append(value??"").Append(' ', size).ToString().Substring(0, size) + delimiter;
             }
+        }
+
+        /// <summary>
+        /// Enumerate through the data and find the longest string in each column
+        /// </summary>
+        /// <param name="dataList"></param>
+        /// <param name="maxColumnWIdth"></param>
+        internal void GenColumns(IEnumerable<string[]> dataList, int maxColumnWIdth = 15, params string[] rowHeaders)
+        {
+            if (_columns.Count > 0) return;
+
+            var headers = (rowHeaders.Length > 0)
+                ? rowHeaders
+                : dataList.Select((C, i) => $"Col {i}").ToArray();
+
+            _columns.AddRange(headers.Select(c => new TextColumn() { Header = c, Width = 1 }));
+
+            ProfileColumns(dataList, maxColumnWIdth).ToArray();
+        }
+
+        /// <summary>
+        /// Enumerate through the data and caharacterize each column
+        /// </summary>
+        /// <param name="dataList"></param>
+        /// <param name="maxColumnWIdth"></param>
+        /// <param name="headerRow"></param>
+        /// <returns></returns>
+        internal IEnumerable<string[]> ProfileColumns(IEnumerable<string[]> dataList, int maxColumnWIdth = 15, int headerRow = -1)
+        {
+            var rowNumber = 0;
+            var column = 0;
+            // for each propery, find the longest length & add columns            
+            foreach (var row in dataList)
+            {
+                column = 0;
+                foreach (var col in row)
+                {
+                    if (col.Length > _columns[column].Width)
+                        _columns[column].Width = col.Length > maxColumnWIdth ? maxColumnWIdth : col.Length;
+                    column++;
+                }
+
+                // return all rows except the header row
+                if (rowNumber != headerRow)
+                    yield return row;
+
+                rowNumber++;
+
+            }
+        }
+
+        /// <summary>
+        /// Enumerate through the data and find the longest string in each column
+        /// Specify the row to use as the header row (defalut is no header row)
+        /// The header row will be used to name the columns, and will be skipped in the data returned   
+        /// </summary>
+        /// <param name="dataList"></param>
+        /// <param name="maxColumnWIdth"></param>
+        internal IEnumerable<string[]> AutoColumns(IEnumerable<string[]> dataList, int maxColumnWIdth = 15, int headerRow = -1)
+        {
+            if (_columns.Count > 0) _columns.Clear();
+
+            var headers = (headerRow >= 0)  
+                ? dataList.ElementAt(headerRow)
+                : dataList.Select((C, i) => $"Col {i}").ToArray();
+
+            _columns.AddRange(headers.Select(c => new TextColumn() { Header = c, Width = 1 }));
+
+            return ProfileColumns(dataList, maxColumnWIdth);
+
         }
 
         public static class Extenions
@@ -235,16 +319,33 @@ namespace Bessett.SmartConsole.Text
                 }
             }
         }
-
-
     }
 
+    public static class TextTableExtensions
+    {
+        /// <summary>
+        /// Render a list of objects directly as a text table
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public static string RenderAsTextTable<T>(this IEnumerable<T> list)
+        where T : class, new()
+        {
+            var table = new TextTable();
+            return table.Render(list);
+        }
 
-
-
-
-
-
-
-
+        /// <summary>
+        /// Render a list of objects directly as a text table
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public static string RenderAsTextTable(this IEnumerable<string[]> list, int MaxColWidth = 15, params string[] headers)
+        //where T : class, IConvertible
+        {
+            var table = new TextTable();
+            table.GenColumns(list, MaxColWidth, headers);
+            return table.Render(list);
+        }
+    }
 }

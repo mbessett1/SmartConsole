@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2048
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole", "SmartConsole\SmartConsole.csproj", "{1C530DD8-B552-4EDE-BC72-E09C4D25F163}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartConsole", "SmartConsole\SmartConsole.csproj", "{1C530DD8-B552-4EDE-BC72-E09C4D25F163}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{BC5AA46A-B441-481D-942A-0DEC0D9E8CAC}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,7 +14,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{BC5AA4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole.Test", "SmartConsole.Test\SmartConsole.Test.csproj", "{FAF70BFE-9C66-41AC-8058-A5435BA69AC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartConsole.TestDNC", "SmartConsole.TestDNC\SmartConsole.TestDNC.csproj", "{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartConsole.TestDNC", "SmartConsole.TestDNC\SmartConsole.TestDNC.csproj", "{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartConsole.Test.Net7", "SmartConsole.Test.Net7\SmartConsole.Test.Net7.csproj", "{0D53470B-C8A6-4494-B04D-ACC426BA68B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartConsole.Service", "SmartConsole.Service\SmartConsole.Service.csproj", "{932CC7FD-50A4-40ED-824D-7BDCD9CB28EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +38,14 @@ Global
 		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A7450AD-BCCA-4E67-BECE-6DD60C820DDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D53470B-C8A6-4494-B04D-ACC426BA68B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D53470B-C8A6-4494-B04D-ACC426BA68B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D53470B-C8A6-4494-B04D-ACC426BA68B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D53470B-C8A6-4494-B04D-ACC426BA68B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{932CC7FD-50A4-40ED-824D-7BDCD9CB28EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{932CC7FD-50A4-40ED-824D-7BDCD9CB28EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{932CC7FD-50A4-40ED-824D-7BDCD9CB28EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{932CC7FD-50A4-40ED-824D-7BDCD9CB28EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -45,7 +45,7 @@ MyApp DoSomething -RequiredValue MyValue -BatchSize 20
   as confirming execution if applicable.
   
 MyApp  {No arguments will show help}
-  Shows help fro all tasks available (those derived from Consoletask)
+  Shows help for all tasks available (those derived from Consoletask)
   
 myApp help DoSomething
   Shows help associated with DoSomething
@@ -70,4 +70,24 @@ Additional Information:
 5. Added return upjects and new overload StartTask
 6. Added supportability for SmartConsole.SmartTasks (Dynamic Tasks)
 
-	
+3.0 Release
+
+1. Added support for Core 2.1 
+2. Support 4.5 backwards compatibility
+
+3.1 Release
+
+3.2 Release
+
+3.3 Release
+
+1. Added net core Hosted service support net6.0 SmartConsole.Service
+2. Added Asynch support for tasks
+
+
+
+
+
+1. Bug fixes
+
+

@@ -10,7 +10,41 @@ namespace Bessett.SmartConsole.Tasks
     [NoConfirmation, TaskHelp("Command Shell")]
     public class Shell : ConsoleTask
     {
+        private readonly SmartConsoleOptions _options;
+
+        internal Shell(SmartConsoleOptions options)
+        {
+            if (options != null)
+            {
+                _options = options;
+            }
+            else
+            {
+                _options = new SmartConsoleOptions();
+            }
+
+            SplashText = _options.Splash;
+            Prompt = _options.Prompt;
+
+        }
+
+        public Shell() { }
+
+        internal Action SplashText { get; set; } = () =>
+        {
+            Console.WriteLine($"{System.AppDomain.CurrentDomain.FriendlyName} Shell\n");
+            Console.WriteLine("'exit', 'quit' or 'q' to quit");
+            Console.WriteLine("'?' or 'help' for help\n");
+        };
+
+        internal Func<string> Prompt { get; set; } = () => "SC> ";
+
         public override TaskResult StartTask()
+        {
+            return StartTaskAsync().Result;
+        }
+
+        public override async Task<TaskResult> StartTaskAsync()
         {
             // Read a command line and perform the tasks over
             // and over
@@ -18,18 +52,16 @@ namespace Bessett.SmartConsole.Tasks
             string command;
             const string helpCommand = "help -Usagetext \"SHELL Usage: <Task Name> [task options]\n\"";
 
-            Console.WriteLine($"{System.AppDomain.CurrentDomain.FriendlyName} Shell\n");
-            Console.WriteLine("'exit', 'quit' or 'q' to quit");
-            Console.WriteLine("'?' or 'help' for help\n");
+            SplashText.Invoke();
 
             do
             {
-                Console.Write("SC> ");
+                Console.Write(Prompt.Invoke());
                 { command = Console.ReadLine().Trim();}
 
-                if (command.ToLower() == "quit") break;
-                if (command.ToLower() == "q") break;
-                if (command.ToLower() == "exit") break;
+                if (   command.ToLower() == "quit"
+                    || command.ToLower() == "q"
+                    || command.ToLower() == "exit")  break;
 
                 // augment requests for help
                 if (
@@ -40,20 +72,20 @@ namespace Bessett.SmartConsole.Tasks
                 {
                     try
                     {
-                        var result = ConsoleProgram.StartTask(command);
+                        var result = await ConsoleProgram.StartTaskAsync(command);
 
                         if (!string.IsNullOrEmpty(result.Message))
                             Console.WriteLine($"[{result.ResultCode}]:\n{result.Message}\n");
                     }
                     catch(Exception ex)
                     {
-                        Console.WriteLine($"An exception ocurred: {ex.Message}");
+                        Console.WriteLine($"An exception ocurred: {ex.GetBaseException().Message}");
                     }
                 }
 
             } while (true);
 
-            return new TaskResult() {IsSuccessful = true, Message = "exiting SmartConsole Shell"};
+            return TaskResult.Complete("exiting SmartConsole Shell");
         }
 
     }

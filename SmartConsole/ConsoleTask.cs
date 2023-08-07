@@ -177,26 +177,37 @@ namespace Bessett.SmartConsole
         public virtual void Complete() { }
 
         /// <summary> 
-        /// Deprecate in favor of StartTask, which returns a result
-        /// if StartTask() is not overridden, a call Start() is automatic
-        /// and generates a generic artificial successful message.
+        /// Deprecate in favor of StartTask, which returns <see cref="TaskResult"/>
+        /// if StartTask() is not overridden, a call to Start() is automatic and generates a generic artificial successful message.
+        /// Note that this result will always be successful, even if the task fails.
         /// </summary>
+        [Obsolete("Use and override for StartTask() instead")]
         public virtual void Start() { }
 
         /// <summary>
         /// Function called once all validation and confirmation complete
+        /// If tis function is NOT overriden, Start() will presumed to be overriden and called instead
         /// </summary>
         /// <returns></returns>
         public virtual TaskResult StartTask()
         {
-            // if we get here, this method was not overridden, so call Start() and
-            // hope for the best :)
-            Start();
-            return new TaskResult()
+            try
             {
-                IsSuccessful = true,
-                Message = ""
-            };
+                // if we get here, this method was not overridden, so call Start() and
+                // hope for the best :)
+#pragma warning disable CS0618 // Type or member is obsolete
+                Start();
+#pragma warning restore CS0618 // Type or member is obsolete
+                return new TaskResult()
+                {
+                    IsSuccessful = true,
+                    Message = "Please use the StartTask override."
+                };
+            }
+            catch (Exception ex)
+            {
+                return TaskResult.Exception(ex);
+            }
         }
 
         /// <summary>
@@ -256,5 +267,31 @@ namespace Bessett.SmartConsole
                 return (helpText != null) ? helpText.LongDescription : "";
             }
         }
+
+        #region Async support
+        /// <summary>
+        /// Basic Async support for running a specified method
+        /// Creates a awaitable Task that invokes the specified method
+        /// </summary>
+        /// <param name="taskStart"></param>
+        /// <returns></returns>
+        public virtual async Task<TaskResult> StartTaskAsync(Func<TaskResult> taskStart)
+        {
+            return await Task.Run( taskStart.Invoke );
+
+        }
+
+        /// <summary>
+        /// Basic Async support for running a defined StartTask() method
+        /// Creates a awaitable Task that invokes StartTak
+        /// </summary>
+        /// <param name="taskStart"></param>
+        /// <returns></returns>
+        public virtual async Task<TaskResult> StartTaskAsync()
+        {
+            return await Task.Run(() => StartTask());
+
+        }
+        #endregion
     }
 }

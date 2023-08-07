@@ -66,7 +66,7 @@ namespace Bessett.SmartConsole.Tasks
             Console.WriteLine(UsageText);
             Console.WriteLine("Tasks Available:\n");
 
-            foreach (var task in TaskLibrary.AllTasks)
+            foreach (var task in TaskLibrary.AllTasks.OrderBy(t=> t.Name))
             {
                 if (!task.NoHelp())
                 {

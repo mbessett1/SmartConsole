@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Smart Console Service Host</Title>
+    <Description>Allow service host implementation for Smart Console</Description>
+    <Copyright>SmartCodeFX, LLC</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartConsole\SmartConsole.csproj" />
+  </ItemGroup>
+
+</Project>

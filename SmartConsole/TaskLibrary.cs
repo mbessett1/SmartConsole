@@ -32,13 +32,20 @@ namespace Bessett.SmartConsole
 
         public static void RegisterTasks( Assembly targetAssembly)
         {
-            var definedTasks = targetAssembly.GetTypes()
-                .Where(t => t.IsClass
-                            && !t.IsAbstract
-                            && t.IsSubclassOf(typeof(ConsoleTask))
-                            );
+            try
+            {
+                var definedTasks = targetAssembly.GetTypes()
+                    .Where(t => t.IsClass
+                                && !t.IsAbstract
+                                && t.IsSubclassOf(typeof(ConsoleTask))
+                                );
+                AllTasks.AddRange(definedTasks);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
-            AllTasks.AddRange(definedTasks);
         }
 
         internal static List<Type> GetTypes<T>()
