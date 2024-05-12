@@ -47,7 +47,7 @@ namespace Bessett.SmartConsole.Text
 
         public TextTable AddColumn(string headerName, int width, AlignmentType alignment = AlignmentType.Left, string propertyName = null)
         {
-            return AddColumn(new TextColumn() { Header = headerName, Width = width, Alignment = alignment, PropertyName = propertyName });
+            return AddColumn(new TextColumn() { Header = headerName, Width = width, Alignment = alignment, PropertyName = propertyName ?? headerName });
           
         }
 
@@ -78,7 +78,7 @@ namespace Bessett.SmartConsole.Text
             return sb.ToString();
         }
 
-        public IEnumerable<string> RenderRows(IEnumerable<string[]> rows, bool includeHeaders = true)
+        public IEnumerable<string> RenderRowsOrig(IEnumerable<string[]> rows, bool includeHeaders = true)
         {
             if (includeHeaders)
                 yield return HeaderText(includeHeaders);
@@ -87,6 +87,81 @@ namespace Bessett.SmartConsole.Text
             {
                 yield return RowText(row);
             }
+        }
+        public IEnumerable<string> RenderRows(IEnumerable<string[]> rows, bool includeHeaders = true)
+        {
+            if (includeHeaders)
+                yield return HeaderText(includeHeaders);
+
+            foreach (var row in rows)
+            {
+                List<List<string>> allColumnLines = new List<List<string>>();
+                int maxLinesPerRow = 0;
+
+                // Process each column's text for overflow
+                for (int colIndex = 0; colIndex < row.Length; colIndex++)
+                {
+                    int columnWidth = _columns[colIndex].Width;  // Retrieve the width from the column definition
+                    var lines = SplitIntoLines(row[colIndex], columnWidth);
+                    allColumnLines.Add(lines);
+                    maxLinesPerRow = Math.Max(maxLinesPerRow, lines.Count);
+                }
+
+                // Normalize the number of lines across all columns
+                foreach (var columnLines in allColumnLines)
+                {
+                    while (columnLines.Count < maxLinesPerRow)
+                        columnLines.Add("");  // Add empty string to ensure all columns have the same number of lines
+                }
+
+                // Combine and yield each line across all columns
+                for (int lineIndex = 0; lineIndex < maxLinesPerRow; lineIndex++)
+                {
+                    var lineToRender = new StringBuilder();
+                    for (int colIndex = 0; colIndex < allColumnLines.Count; colIndex++)
+                    {
+                        lineToRender.Append(FormatCell(allColumnLines[colIndex][lineIndex], _columns[colIndex].Width, _columns[colIndex].Alignment));
+                    }
+                    yield return lineToRender.ToString();
+                }
+            }
+        }
+
+        private List<string> SplitIntoLines(string text, int maxWidth)
+        {
+            List<string> lines = new List<string>();
+            int start = 0;
+            while (start < text.Length)
+            {
+                int length = Math.Min(maxWidth, text.Length - start);
+                lines.Add(text.Substring(start, length));
+                start += length;
+            }
+            return lines;
+        }
+
+        private string FormatCell(string text, int width, AlignmentType alignment)
+        {
+            // Format text based on alignment: left, right, or center.
+            switch (alignment)
+            {
+                case AlignmentType.Left:
+                    return text.PadRight(width);
+                case AlignmentType.Right:
+                    return text.PadLeft(width);
+                case AlignmentType.Center:
+                    int padding = (width - text.Length) / 2;
+                    return text.PadLeft(text.Length + padding).PadRight(width);
+                default:
+                    return text.PadRight(width);
+            }
+        }
+
+        private string TextFieldNEW2(string value, int size, AlignmentType alignment)
+        {
+            // Assuming the TextField method handles text fitting and alignment properly
+            // Placeholder implementation for TextField
+            return value.PadRight(size).Substring(0, size);
         }
 
         int buildColumns(IEnumerable<object> target, Type objType, PropertyInfo info)
@@ -107,6 +182,48 @@ namespace Bessett.SmartConsole.Text
         }
 
         public IEnumerable<string> RenderRows(IEnumerable<object> rows, bool includeHeaders = true)
+        {
+            if (includeHeaders)
+                yield return HeaderText(includeHeaders);
+
+            foreach (var row in rows)
+            {
+                List<List<string>> allColumnLines = new List<List<string>>();
+                int maxLinesPerRow = 0;
+
+                // Process each property in the row object for overflow
+                for (int colIndex = 0; colIndex < _columns.Count; colIndex++)
+                {
+                    var column = _columns[colIndex];
+                    var propertyValue = row.GetType().GetProperty(column.PropertyName)?.GetValue(row, null)?.ToString() ?? "";
+
+                    int columnWidth = column.Width;
+                    var lines = SplitIntoLines(propertyValue, columnWidth);
+                    allColumnLines.Add(lines);
+                    maxLinesPerRow = Math.Max(maxLinesPerRow, lines.Count);
+                }
+
+                // Normalize the number of lines across all columns
+                foreach (var columnLines in allColumnLines)
+                {
+                    while (columnLines.Count < maxLinesPerRow)
+                        columnLines.Add("");  // Add empty string to ensure all columns have the same number of lines
+                }
+
+                // Combine and yield each line across all columns
+                for (int lineIndex = 0; lineIndex < maxLinesPerRow; lineIndex++)
+                {
+                    var lineToRender = new StringBuilder();
+                    for (int colIndex = 0; colIndex < allColumnLines.Count; colIndex++)
+                    {
+                        lineToRender.Append(FormatCell(allColumnLines[colIndex][lineIndex], _columns[colIndex].Width, _columns[colIndex].Alignment));
+                    }
+                    yield return lineToRender.ToString();
+                }
+            }
+        }
+
+        public IEnumerable<string> RenderRowsOrig(IEnumerable<object> rows, bool includeHeaders = true)
         {
             Type rowType = null;
             PropertyInfo[] rowTypeProperties = null;
@@ -196,6 +313,118 @@ namespace Bessett.SmartConsole.Text
                 default:
                     return result.Append(value??"").Append(' ', size).ToString().Substring(0, size) + delimiter;
             }
+        }
+
+        string TextFieldOrig1(string value, int size, AlignmentType alignment = AlignmentType.Left, string delimiter = " ")
+        {
+            if (string.IsNullOrEmpty(value))
+                value = ""; // Handle null or empty strings
+
+            List<string> wrappedLines = WordWrap(value, size); // Wrap text into lines
+
+            StringBuilder formattedResult = new StringBuilder();
+
+            foreach (var line in wrappedLines)
+            {
+                // Apply alignment to each line
+                switch (alignment)
+                {
+                    case AlignmentType.Right:
+                        formattedResult.AppendLine(line.PadLeft(size));
+                        break;
+                    case AlignmentType.Center:
+                        int padding = (size - line.Length) / 2;
+                        formattedResult.AppendLine(line.PadLeft(line.Length + padding).PadRight(size));
+                        break;
+                    case AlignmentType.Left:
+                    default:
+                        formattedResult.AppendLine(line.PadRight(size));
+                        break;
+                }
+            }
+
+            return formattedResult.ToString().TrimEnd();
+        }
+
+        string TextFieldNew(string value, int size, AlignmentType alignment = AlignmentType.Left, string delimiter = " ")
+        {
+            var result = new StringBuilder();
+
+            // Ensure handling null or empty values
+            if (string.IsNullOrEmpty(value))
+            {
+                return result.Append(' ', size).ToString().Substring(0, size) + delimiter;
+            }
+
+            // Word wrapping logic
+            var words = value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var currentLine = new StringBuilder();
+
+            foreach (var word in words)
+            {
+                if (currentLine.Length + word.Length + 1 > size) // Check if adding this word would exceed the width
+                {
+                    result.AppendLine(currentLine.ToString().PadRight(size)); // Finish the current line
+                    currentLine.Clear();
+                }
+
+                if (currentLine.Length > 0)
+                    currentLine.Append(" ");
+
+                currentLine.Append(word);
+            }
+
+            if (currentLine.Length > 0)
+                result.AppendLine(currentLine.ToString().PadRight(size)); // Add the last line
+
+            // Aligning the text as per the specified alignment
+            var lines = result.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            result.Clear();
+            foreach (var line in lines)
+            {
+                switch (alignment)
+                {
+                    case AlignmentType.Center:
+                        int padding = (size - line.Trim().Length) / 2;
+                        result.AppendLine(line.Trim().PadLeft(padding + line.Trim().Length).PadRight(size));
+                        break;
+                    case AlignmentType.Right:
+                        result.AppendLine(line.Trim().PadLeft(size));
+                        break;
+                    default:
+                        result.AppendLine(line.PadRight(size));
+                        break;
+                }
+            }
+
+            return result.ToString().TrimEnd(); // Ensure we remove the last new line for the last row
+        }
+
+        List<string> WordWrap(string text, int maxLineLength)
+        {
+            List<string> lines = new List<string>();
+
+            if (string.IsNullOrEmpty(text))
+            {
+                lines.Add(""); // return an empty line for empty text
+                return lines;
+            }
+
+            int start = 0, end;
+            while ((end = start + maxLineLength) < text.Length)
+            {
+                while (text[end] != ' ' && end > start) end--;
+                if (end == start) end = start + maxLineLength; // If no spaces, force wrap
+
+                lines.Add(text.Substring(start, end - start).Trim());
+                start = end + 1;
+            }
+
+            if (start < text.Length)
+                lines.Add(text.Substring(start).Trim());
+
+            return lines;
         }
 
         /// <summary>
